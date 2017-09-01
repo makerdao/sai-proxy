@@ -56,6 +56,11 @@ contract SaiProxyTest is SaiTestBase {
         assertEq(skr.balanceOf(proxy), 0);
     }
 
+    function testProxyDrawChangeMat() {
+        proxyDraw("", 50 ether, 1 ether);
+        assertEq(skr.balanceOf(proxy), 0);
+    }
+
     function testProxyDrawSKRInBalance() {
         tub.join(50 ether);
         skr.transfer(proxy, 50 ether);
@@ -92,6 +97,11 @@ contract SaiProxyTest is SaiTestBase {
     function testProxyWipe() {
         proxyDraw("", 50 ether, 1.5 ether);
         proxyWipe(1, 40 ether, 1.5 ether);
+    }
+
+    function testProxyChangeMat() {
+        proxyDraw("", 50 ether, 1.5 ether);
+        proxyWipe(1, 40 ether, 1 ether);
     }
 
     function testFailProxyWipeBelowTubMat() {
