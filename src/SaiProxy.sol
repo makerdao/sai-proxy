@@ -6,19 +6,23 @@ contract TubInterface {
     function open() returns (bytes32);
     function join(uint128);
     function lock(bytes32, uint128);
+    function free(bytes32, uint128);
     function draw(bytes32, uint128);
+    function wipe(bytes32, uint128);
     function cups(bytes32) returns (address, uint128, uint128);
-    function gem() returns (address);
-    function skr() returns (address);
-    function sai() returns (address);
-    function jar() returns (address);
-    function tip() returns (address);
+    function gem() returns (TokenInterface);
+    function skr() returns (TokenInterface);
+    function sai() returns (TokenInterface);
+    function jar() returns (JarInterface);
+    function tip() returns (TipInterface);
+    function pot() returns (address);
     function mat() returns (uint128);
-    function tab(bytes32) returns (uint128);
     function chi() returns (uint128);
+    function tab(bytes32) returns (uint128);
 }
 
 contract TokenInterface {
+    function balanceOf(address) returns (uint);
     function approve(address, uint);
     function transfer(address, uint) returns (bool);
     function transferFrom(address, address, uint) returns (bool);
@@ -34,63 +38,66 @@ contract TipInterface {
 }
 
 contract SaiProxy is DSThing {
-    TubInterface public tub;
-    TokenInterface gem;
-    TokenInterface skr;
-    TokenInterface sai;
-    JarInterface   jar;
-    TipInterface   tip;
-
-    function SaiProxy(address _tub) {
-        tub = TubInterface(_tub);
-        gem = TokenInterface(tub.gem());
-        skr = TokenInterface(tub.skr());
-        sai = TokenInterface(tub.sai());
-        jar = JarInterface(tub.jar());
-        tip = TipInterface(tub.tip());
+    function processInk(TubInterface tub, bytes32 cup, uint128 wad, uint128 mat) internal {
+        // Calculate necessary skr for specific 'wad' amount of sai and leave CDP with 'mat' percentage collateralized
+        uint128 ink = wdiv(rmul(wmul(tub.tip().par(), rmul(wad, tub.chi())), mat), tub.jar().tag());
+        var (,,cink) = tub.cups(cup);
+        // Check if skr needs to be locked or freed
+        if (ink > cink) {
+            // Check if there is already skr in balance to be locked
+            if (hsub(ink, cink) > tub.skr().balanceOf(this)) {
+                var jam = rmul(hsub(hsub(ink, cink), uint128(tub.skr().balanceOf(this))), tub.jar().per());
+                tub.gem().approve(tub.jar(), jam);
+                tub.join(jam);
+            }
+            tub.skr().approve(tub.jar(), hsub(ink, cink));
+            tub.lock(cup, hsub(ink, cink));
+        } else if (cink > ink) {
+            tub.free(cup, hsub(cink, ink));
+        }
     }
-
-    function pull(address tok, uint128 wad) auth {
-        assert(TokenInterface(tok).transfer(owner, wad));
-    }
-
-    // function push(address tok, uint128 wad) auth {
-    //     assert(TokenInterface(tok).transferFrom(owner, this, wad));
-    // }
 
     /**
     * Draws 'wad' amount of SAI locking enough SKR to keep the CDP with 'mat' percentage of collateralization
     *
-    * @param    cup    CDP ID
+    * @param    _tub   TUB Address
+    * @param    cup    CUP ID (CDP)
     * @param    wad    Amount of SAI to draw
     * @param    mat    collateralization of CDP after drawing
     */
-    function draw(bytes32 cup, uint128 wad, uint128 mat) auth {
+    function draw(address _tub, bytes32 cup, uint128 wad, uint128 mat) auth {
+        var tub = TubInterface(_tub);
+        // Require desired mat is equal or higher than minimum defined in tub
         require(mat >= tub.mat());
-        var (,cart,cink) = tub.cups(cup);
-        uint128 ink = hsub(wdiv(rmul(wmul(tip.par(), rmul(hadd(wad, cart), tub.chi())), mat), jar.tag()), cink);
-        uint128 jam = rmul(ink, jar.per());
-        gem.approve(jar, jam);
-        tub.join(jam);
-        skr.approve(jar, ink);
-        tub.lock(cup, ink);
+        // Bring cup values
+        var (,cart,) = tub.cups(cup);
+        processInk(tub, cup, hadd(wad, cart), mat);
         tub.draw(cup, wad);
     }
 
-    function draw(uint128 wad, uint128 ratio) auth {
+    function draw(address _tub, uint128 wad, uint128 mat) auth {
+        var tub = TubInterface(_tub);
         var cup = tub.open();
-        draw(cup, wad, ratio);
+        draw(_tub, cup, wad, mat);
     }
 
     /**
     * Wipes 'wad' amount of SAI leaving enough locked SKR to keep the CDP with 'mat' percentage of collateralization
     *
-    * @param    cup    CDP ID
+    * @param    _tub   TUB Address
+    * @param    cup    CUP ID (CDP)
     * @param    wad    Amount of SAI to wipe
     * @param    mat    collateralization of CDP after wiping
     */
-    // function wipe(bytes32 cup, uint128 wad, uint128 mat) auth {
-    //     require(mat >= tub.mat());
-    //     var (,cart,cink) = tub.cups(cup);
-    // }
+    function wipe(address _tub, bytes32 cup, uint128 wad, uint128 mat) auth {
+        var tub = TubInterface(_tub);
+        // Require desired mat is equal or higher than minimum defined in tub
+        require(mat >= tub.mat());
+        // Bring cup values
+        var (,cart,) = tub.cups(cup);
+        assert(cart >= wad);
+        tub.sai().approve(tub.pot(), wad);
+        tub.wipe(cup, wad);
+        processInk(tub, cup, hsub(cart, wad), mat);
+    }
 }
