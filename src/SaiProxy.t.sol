@@ -32,9 +32,9 @@ contract SaiProxyTest is SaiTestBase {
         assertEq(sai.balanceOf(this), 0 ether);
         gem.transfer(proxy, 100 ether);
         if (cup != "") {
-            proxy.draw(address(tub), cup, wad, ray(mat));
+            proxy.draw(TubInterface(tub), cup, wad, ray(mat));
         } else {
-            proxy.draw(address(tub), wad, ray(mat));
+            proxy.draw(TubInterface(tub), wad, ray(mat));
         }
         var (,art,ink) = tub.cups(1);
         assertEq(sai.balanceOf(proxy), wad);
@@ -44,7 +44,7 @@ contract SaiProxyTest is SaiTestBase {
 
     function proxyWipe(bytes32 cup, uint128 wad, uint128 mat) {
         var saiBalance = uint128(sai.balanceOf(proxy));
-        proxy.wipe(address(tub), cup, wad, ray(mat));
+        proxy.wipe(TubInterface(tub), cup, wad, ray(mat));
         var (,art,ink) = tub.cups(1);
         assertEq(sai.balanceOf(proxy), 10 ether);
         assertEq(uint256(art), hsub(saiBalance, wad));

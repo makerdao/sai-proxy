@@ -60,13 +60,12 @@ contract SaiProxy is DSThing {
     /**
     * Draws 'wad' amount of SAI locking enough SKR to keep the CDP with 'mat' percentage of collateralization
     *
-    * @param    _tub   TUB Address
+    * @param    tub    TUB Address
     * @param    cup    CUP ID (CDP)
     * @param    wad    Amount of SAI to draw
     * @param    mat    collateralization of CDP after drawing
     */
-    function draw(address _tub, bytes32 cup, uint128 wad, uint128 mat) auth {
-        var tub = TubInterface(_tub);
+    function draw(TubInterface tub, bytes32 cup, uint128 wad, uint128 mat) auth {
         // Require desired mat is equal or higher than minimum defined in tub
         require(mat >= tub.mat());
         // Bring cup values
@@ -75,22 +74,20 @@ contract SaiProxy is DSThing {
         tub.draw(cup, wad);
     }
 
-    function draw(address _tub, uint128 wad, uint128 mat) auth {
-        var tub = TubInterface(_tub);
+    function draw(TubInterface tub, uint128 wad, uint128 mat) auth {
         var cup = tub.open();
-        draw(_tub, cup, wad, mat);
+        draw(tub, cup, wad, mat);
     }
 
     /**
     * Wipes 'wad' amount of SAI leaving enough locked SKR to keep the CDP with 'mat' percentage of collateralization
     *
-    * @param    _tub   TUB Address
+    * @param    tub    TUB Address
     * @param    cup    CUP ID (CDP)
     * @param    wad    Amount of SAI to wipe
     * @param    mat    collateralization of CDP after wiping
     */
-    function wipe(address _tub, bytes32 cup, uint128 wad, uint128 mat) auth {
-        var tub = TubInterface(_tub);
+    function wipe(TubInterface tub, bytes32 cup, uint128 wad, uint128 mat) auth {
         // Require desired mat is equal or higher than minimum defined in tub
         require(mat >= tub.mat());
         // Bring cup values
