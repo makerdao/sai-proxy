@@ -39,17 +39,19 @@ contract TipInterface {
 
 contract SaiProxy is DSThing {
     function processInk(TubInterface tub, bytes32 cup, uint128 wad, uint128 mat) internal {
-        // Calculate necessary skr for specific 'wad' amount of sai and leave CDP with 'mat' percentage collateralized
+        // Calculate necessary SKR for specific 'wad' amount of SAI and leave CDP with 'mat' percentage collateralized
         uint128 ink = wdiv(rmul(wmul(tub.tip().par(), rmul(wad, tub.chi())), mat), tub.jar().tag());
         var (,,cink) = tub.cups(cup);
-        // Check if skr needs to be locked or freed
+        // Check if SKR needs to be locked or freed
         if (ink > cink) {
             // Check if there is already skr in balance to be locked
             if (hsub(ink, cink) > tub.skr().balanceOf(this)) {
+                // Change GEM to SKR via 'join'
                 var jam = rmul(hsub(hsub(ink, cink), uint128(tub.skr().balanceOf(this))), tub.jar().per());
                 tub.gem().approve(tub.jar(), jam);
                 tub.join(jam);
             }
+            // Lock SKR
             tub.skr().approve(tub.jar(), hsub(ink, cink));
             tub.lock(cup, hsub(ink, cink));
         } else if (cink > ink) {
@@ -66,11 +68,11 @@ contract SaiProxy is DSThing {
     * @param    mat    collateralization of CDP after drawing
     */
     function draw(TubInterface tub, bytes32 cup, uint128 wad, uint128 mat) auth {
-        // Require desired mat is equal or higher than minimum defined in tub
+        // Require desired 'mat' is equal or higher than minimum defined in TUB
         require(mat >= tub.mat());
         // Bring cup values
         var (,cart,) = tub.cups(cup);
-        processInk(tub, cup, hadd(wad, cart), mat);
+        processInk(tub, cup, hadd(rdiv(wad, tub.chi()), cart), mat);
         tub.draw(cup, wad);
     }
 
@@ -88,13 +90,13 @@ contract SaiProxy is DSThing {
     * @param    mat    collateralization of CDP after wiping
     */
     function wipe(TubInterface tub, bytes32 cup, uint128 wad, uint128 mat) auth {
-        // Require desired mat is equal or higher than minimum defined in tub
+        // Require desired 'mat' is equal or higher than minimum defined in TUB
         require(mat >= tub.mat());
         // Bring cup values
         var (,cart,) = tub.cups(cup);
-        assert(cart >= wad);
+        assert(cart >= rdiv(wad, tub.chi()));
         tub.sai().approve(tub.pot(), wad);
         tub.wipe(cup, wad);
-        processInk(tub, cup, hsub(cart, wad), mat);
+        processInk(tub, cup, hsub(cart, rdiv(wad, tub.chi())), mat);
     }
 }
