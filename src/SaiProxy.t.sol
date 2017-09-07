@@ -38,8 +38,8 @@ contract SaiProxyTest is SaiTestBase {
         }
         var (,art,ink) = tub.cups(1);
         assertEq(sai.balanceOf(proxy), wad);
-        assertEq(uint256(art), wad);
-        assertEq(uint256(ink), wmul(wad, mat));
+        assertEq(uint256(art), rdiv(wad, tub.chi()));
+        assertEq(uint256(ink), wdiv(rmul(wmul(tip.par(), wad), ray(mat)), jar.tag()));
     }
 
     function proxyWipe(bytes32 cup, uint128 wad, uint128 mat) {
@@ -92,6 +92,20 @@ contract SaiProxyTest is SaiTestBase {
 
     function testFailProxyDrawBelowTubMat() {
         proxyDraw("", 50 ether, 0.9999 ether);
+    }
+
+    function testProxyDrawAfterPeriodChi() {
+        tub.crop(1000008022568992670911001251);  // 200% / day
+        tip.warp(1 days);
+        proxyDraw("", 100 ether, 1 ether);
+        assertEq(skr.balanceOf(proxy), 0);
+    }
+
+    function testProxyDrawAfterPeriodPar() {
+        tip.coax(1000008022568992670911001251);  // 200% / day
+        tip.warp(1 days);
+        proxyDraw("", 50 ether, 1 ether);
+        assertEq(skr.balanceOf(proxy), 0);
     }
 
     function testProxyWipe() {
