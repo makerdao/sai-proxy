@@ -9,6 +9,8 @@ contract TubInterface {
     function free(bytes32, uint128);
     function draw(bytes32, uint128);
     function wipe(bytes32, uint128);
+    function give(bytes32, address);
+    function shut(bytes32);
     function cups(bytes32) returns (address, uint128, uint128);
     function gem() returns (TokenInterface);
     function skr() returns (TokenInterface);
@@ -60,7 +62,7 @@ contract SaiProxy is DSThing {
     }
 
     /**
-    * Draws 'wad' amount of SAI locking enough SKR to keep the CDP with 'mat' percentage of collateralization
+    * Draws 'wad' amount of SAI locking enough SKR to keep the CDP with 'mat' percentage of collateralization (in an existing CDP)
     *
     * @param    tub    TUB Address
     * @param    cup    CUP ID (CDP)
@@ -76,6 +78,13 @@ contract SaiProxy is DSThing {
         tub.draw(cup, wad);
     }
 
+    /**
+    * Draws 'wad' amount of SAI locking enough SKR to keep the CDP with 'mat' percentage of collateralization (creating a new CDP)
+    *
+    * @param    tub    TUB Address
+    * @param    wad    Amount of SAI to draw
+    * @param    mat    collateralization of CDP after drawing
+    */
     function draw(TubInterface tub, uint128 wad, uint128 mat) auth {
         var cup = tub.open();
         draw(tub, cup, wad, mat);
@@ -98,5 +107,47 @@ contract SaiProxy is DSThing {
         tub.sai().approve(tub.pot(), wad);
         tub.wipe(cup, wad);
         processInk(tub, cup, hsub(cart, rdiv(wad, tub.chi())), mat);
+    }
+
+    /**
+    * Transfers CDP to 'lad' new owner
+    *
+    * @param    tub    TUB Address
+    * @param    cup    CUP ID (CDP)
+    * @param    lad    Address of new owner
+    */
+    function give(TubInterface tub, bytes32 cup, address lad) auth {
+        tub.give(cup, lad);
+    }
+
+    /**
+    * Closes CDP
+    *
+    * @param    tub    TUB Address
+    * @param    cup    CUP ID (CDP)
+    */
+    function shut(TubInterface tub, bytes32 cup) auth {
+        tub.shut(cup);
+    }
+
+    /**
+    * Transfers 'wad' amount from 'tok' token to 'guy' address
+    *
+    * @param    tok    Token Address
+    * @param    guy    Address which will receive the amount
+    * @param    wad    Amount to be transferred
+    */
+    function pull(TokenInterface tok, address guy, uint128 wad) auth {
+        tok.transfer(guy, wad);
+    }
+
+    /**
+    * Transfers 'wad' amount from 'tok' token to msg.sender
+    *
+    * @param    tok    Token Address
+    * @param    wad    Amount to be transferred
+    */
+    function pull(TokenInterface tok, uint128 wad) auth {
+        tok.transfer(msg.sender, wad);
     }
 }
