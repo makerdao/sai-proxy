@@ -129,25 +129,4 @@ contract SaiProxy is DSThing {
     function shut(TubInterface tub, bytes32 cup) auth {
         tub.shut(cup);
     }
-
-    /**
-    * Transfers 'wad' amount from 'tok' token to 'guy' address
-    *
-    * @param    tok    Token Address
-    * @param    guy    Address which will receive the amount
-    * @param    wad    Amount to be transferred
-    */
-    function pull(TokenInterface tok, address guy, uint128 wad) auth {
-        tok.transfer(guy, wad);
-    }
-
-    /**
-    * Transfers 'wad' amount from 'tok' token to msg.sender
-    *
-    * @param    tok    Token Address
-    * @param    wad    Amount to be transferred
-    */
-    function pull(TokenInterface tok, uint128 wad) auth {
-        tok.transfer(msg.sender, wad);
-    }
 }
