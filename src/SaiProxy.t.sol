@@ -7,12 +7,12 @@ import "./SaiProxy.sol";
 
 contract SaiProxyExtended is SaiProxy {
     function open(address _tub) {
-        var tub = Tub(_tub);
+        var tub = SaiTub(_tub);
         tub.open();
     }
     function lock(address _tub, bytes32 cup, uint128 wad) {
-        var tub = Tub(_tub);
-        ERC20(tub.skr()).approve(tub.jar(), wad);
+        var tub = SaiTub(_tub);
+        ERC20(tub.skr()).approve(tub, wad);
         tub.lock(cup, wad);
     }
 }
@@ -22,9 +22,8 @@ contract SaiProxyTest is SaiTestBase {
 
     function setUp() {
         super.setUp();
-        setPublicRoles();
         proxy = new SaiProxyExtended();
-        tub.cork(1000 ether);
+        mom.setHat(1000 ether);
         gem.mint(900 ether);
     }
 
@@ -36,19 +35,19 @@ contract SaiProxyTest is SaiTestBase {
         } else {
             proxy.draw(TubInterface(tub), wad, ray(mat));
         }
-        var (,art,ink) = tub.cups(1);
+        var (,ink,art) = tub.cups(1);
         assertEq(sai.balanceOf(proxy), wad);
-        assertEq(uint256(art), rdiv(wad, tub.chi()));
-        assertEq(uint256(ink), wdiv(rmul(wmul(tip.par(), wad), ray(mat)), jar.tag()));
+        assertEq(art, rdiv(wad, tub.chi()));
+        assertEq(ink, wdiv(rmul(wmul(vox.par(), wad), ray(mat)), tub.tag()));
     }
 
     function proxyWipe(bytes32 cup, uint128 wad, uint128 mat) {
         var saiBalance = uint128(sai.balanceOf(proxy));
         proxy.wipe(TubInterface(tub), cup, wad, ray(mat));
-        var (,art,ink) = tub.cups(1);
+        var (,ink,art) = tub.cups(1);
         assertEq(sai.balanceOf(proxy), 10 ether);
-        assertEq(uint256(art), hsub(saiBalance, wad));
-        assertEq(uint256(ink), wmul(hsub(saiBalance, wad), mat));
+        assertEq(art, sub(saiBalance, wad));
+        assertEq(ink, wmul(sub(saiBalance, wad), mat));
     }
 
     function testProxyDraw() {
@@ -74,8 +73,8 @@ contract SaiProxyTest is SaiTestBase {
         tub.join(50 ether);
         skr.transfer(proxy, 50 ether);
         proxy.lock(tub, 1, 50 ether);
-        var (,,ink) = tub.cups(1);
-        assertEq(uint256(ink), 50 ether);
+        var (,ink,) = tub.cups(1);
+        assertEq(ink, 50 ether);
         proxyDraw(1, 50 ether, 1.5 ether);
         assertEq(skr.balanceOf(proxy), 0);
     }
@@ -85,8 +84,8 @@ contract SaiProxyTest is SaiTestBase {
         tub.join(100 ether);
         skr.transfer(proxy, 100 ether);
         proxy.lock(tub, 1, 100 ether);
-        var (,,ink) = tub.cups(1);
-        assertEq(uint256(ink), 100 ether);
+        var (,ink,) = tub.cups(1);
+        assertEq(ink, 100 ether);
         proxyDraw(1, 50 ether, 1.5 ether);
     }
 
@@ -95,15 +94,15 @@ contract SaiProxyTest is SaiTestBase {
     }
 
     function testProxyDrawAfterPeriodChi() {
-        tub.crop(1000008022568992670911001251);  // 200% / day
-        tip.warp(1 days);
+        mom.setTax(1000008022568992670911001251);  // 200% / day
+        vox.warp(1 days);
         proxyDraw("", 100 ether, 1 ether);
         assertEq(skr.balanceOf(proxy), 0);
     }
 
     function testProxyDrawAfterPeriodPar() {
-        tip.coax(1000008022568992670911001251);  // 200% / day
-        tip.warp(1 days);
+        mom.setWay(1000008022568992670911001251);  // 200% / day
+        vox.warp(1 days);
         proxyDraw("", 50 ether, 1 ether);
         assertEq(skr.balanceOf(proxy), 0);
     }
