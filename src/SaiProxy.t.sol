@@ -10,7 +10,7 @@ contract SaiProxyExtended is SaiProxy {
         var tub = SaiTub(_tub);
         tub.open();
     }
-    function lock(address _tub, bytes32 cup, uint128 wad) {
+    function lock(address _tub, bytes32 cup, uint wad) {
         var tub = SaiTub(_tub);
         ERC20(tub.skr()).approve(tub, wad);
         tub.lock(cup, wad);
@@ -27,7 +27,7 @@ contract SaiProxyTest is SaiTestBase {
         gem.mint(900 ether);
     }
 
-    function proxyDraw(bytes32 cup, uint128 wad, uint128 mat) {
+    function proxyDraw(bytes32 cup, uint wad, uint mat) {
         assertEq(sai.balanceOf(this), 0 ether);
         gem.transfer(proxy, 100 ether);
         if (cup != "") {
@@ -41,8 +41,8 @@ contract SaiProxyTest is SaiTestBase {
         assertEq(ink, wdiv(rmul(wmul(vox.par(), wad), ray(mat)), tub.tag()));
     }
 
-    function proxyWipe(bytes32 cup, uint128 wad, uint128 mat) {
-        var saiBalance = uint128(sai.balanceOf(proxy));
+    function proxyWipe(bytes32 cup, uint wad, uint mat) {
+        var saiBalance = uint(sai.balanceOf(proxy));
         proxy.wipe(TubInterface(tub), cup, wad, ray(mat));
         var (,ink,art) = tub.cups(1);
         assertEq(sai.balanceOf(proxy), 10 ether);

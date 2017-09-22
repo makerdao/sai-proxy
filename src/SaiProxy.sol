@@ -4,23 +4,24 @@ import "ds-thing/thing.sol";
 
 contract TubInterface {
     function open() returns (bytes32);
-    function join(uint256);
-    function lock(bytes32, uint256);
-    function free(bytes32, uint256);
-    function draw(bytes32, uint256);
-    function wipe(bytes32, uint256);
+    function join(uint);
+    function lock(bytes32, uint);
+    function free(bytes32, uint);
+    function draw(bytes32, uint);
+    function wipe(bytes32, uint);
     function give(bytes32, address);
     function shut(bytes32);
-    function cups(bytes32) returns (address, uint256, uint256);
+    function cups(bytes32) returns (address, uint, uint);
     function gem() returns (TokenInterface);
     function skr() returns (TokenInterface);
     function sai() returns (TokenInterface);
     function vox() returns (VoxInterface);
-    function mat() returns (uint256);
-    function chi() returns (uint256);
-    function tab(bytes32) returns (uint256);
-    function per() returns (uint256);
-    function tag() returns (uint256);
+    function mat() returns (uint);
+    function chi() returns (uint);
+    function tab(bytes32) returns (uint);
+    function per() returns (uint);
+    function pip() returns (uint);
+    function tag() returns (uint);
 }
 
 contract TokenInterface {
@@ -31,13 +32,13 @@ contract TokenInterface {
 }
 
 contract VoxInterface {
-    function par() returns (uint256);
+    function par() returns (uint);
 }
 
 contract SaiProxy is DSThing {
-    function processInk(TubInterface tub, bytes32 cup, uint256 wad, uint256 mat) internal {
+    function processInk(TubInterface tub, bytes32 cup, uint wad, uint mat) internal {
         // Calculate necessary SKR for specific 'wad' amount of SAI and leave CDP with 'mat' percentage collateralized
-        uint256 ink = wdiv(rmul(wmul(tub.vox().par(), rmul(wad, tub.chi())), mat), tub.tag());
+        uint ink = wdiv(rmul(wmul(tub.vox().par(), rmul(wad, tub.chi())), mat), tub.tag());
         var (,cink,) = tub.cups(cup);
         // Check if SKR needs to be locked or freed
         if (ink > cink) {
@@ -64,7 +65,7 @@ contract SaiProxy is DSThing {
     * @param    wad    Amount of SAI to draw
     * @param    mat    collateralization of CDP after drawing
     */
-    function draw(TubInterface tub, bytes32 cup, uint256 wad, uint256 mat) auth {
+    function draw(TubInterface tub, bytes32 cup, uint wad, uint mat) auth {
         // Require desired 'mat' is equal or higher than minimum defined in TUB
         require(mat >= tub.mat());
         // Bring cup values
@@ -80,7 +81,7 @@ contract SaiProxy is DSThing {
     * @param    wad    Amount of SAI to draw
     * @param    mat    collateralization of CDP after drawing
     */
-    function draw(TubInterface tub, uint256 wad, uint256 mat) auth {
+    function draw(TubInterface tub, uint wad, uint mat) auth {
         var cup = tub.open();
         draw(tub, cup, wad, mat);
     }
@@ -93,7 +94,7 @@ contract SaiProxy is DSThing {
     * @param    wad    Amount of SAI to wipe
     * @param    mat    collateralization of CDP after wiping
     */
-    function wipe(TubInterface tub, bytes32 cup, uint256 wad, uint256 mat) auth {
+    function wipe(TubInterface tub, bytes32 cup, uint wad, uint mat) auth {
         // Require desired 'mat' is equal or higher than minimum defined in TUB
         require(mat >= tub.mat());
         // Bring cup values
