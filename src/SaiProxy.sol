@@ -5,6 +5,7 @@ import "ds-thing/thing.sol";
 contract TubInterface {
     function open() returns (bytes32);
     function join(uint);
+    function exit(uint);
     function lock(bytes32, uint);
     function free(bytes32, uint);
     function draw(bytes32, uint);
@@ -29,6 +30,8 @@ contract TokenInterface {
     function approve(address, uint);
     function transfer(address, uint) returns (bool);
     function transferFrom(address, address, uint) returns (bool);
+
+    function trust(address,bool);
 }
 
 contract VoxInterface {
@@ -124,5 +127,115 @@ contract SaiProxy is DSThing {
     */
     function shut(TubInterface tub, bytes32 cup) auth {
         tub.shut(cup);
+    }
+}
+
+
+// Writing more proxy functions: for now these need to not take any
+// constructor args, as there isn't a way to pass them in at creation.
+//
+// The examples given here are small and self-contained. ds-proxy has
+// caching, so the first time one of these is used will be expensive,
+// but subsequent calls will have little overhead.
+//
+// You could make multi function versions; you could also have setters
+// for state variables - but then you may need to think about e.g.
+// restricting access via auth.
+//
+// To use these via a frontend or in testing, `dapp build` the contracts
+// and then copy the contents of e.g. `out/SaiDraw.bin` to where it will
+// be used.
+
+/// Single act proxy functions for the base acts
+
+// n.b. if you change these, you need to update the corresponding `code`
+// in the tests :s
+
+contract SaiJoin {
+    function join(address tub, uint wad) {
+        TubInterface(tub).join(wad);
+    }
+}
+contract SaiExit {
+    function exit(address tub, uint wad) {
+        TubInterface(tub).exit(wad);
+    }
+}
+
+contract SaiOpen {
+    function open(address tub) returns (bytes32) {
+        return TubInterface(tub).open();
+    }
+}
+contract SaiGive {
+    function give(address tub, bytes32 cup, address lad) {
+        TubInterface(tub).give(cup, lad);
+    }
+}
+
+contract SaiLock {
+    function lock(address tub, bytes32 cup, uint wad) {
+        TubInterface(tub).lock(cup, wad);
+    }
+}
+contract SaiFree {
+    function free(address tub, bytes32 cup, uint wad) {
+        TubInterface(tub).free(cup, wad);
+    }
+}
+
+contract SaiDraw {
+    function draw(address tub, bytes32 cup, uint wad) {
+        TubInterface(tub).draw(cup, wad);
+    }
+}
+contract SaiWipe {
+    function wipe(address tub, bytes32 cup, uint wad) {
+        TubInterface(tub).wipe(cup, wad);
+    }
+}
+
+contract SaiShut {
+    function shut(address tub, bytes32 cup) {
+        TubInterface(tub).shut(cup);
+    }
+}
+
+
+/// Multi act proxy functions
+
+// Trust the whole system
+contract SaiTrust {
+    function trust(address tub, address tap) {
+        var gem = TubInterface(tub).gem();
+        var skr = TubInterface(tub).skr();
+        var sai = TubInterface(tub).sai();
+
+        gem.trust(tub, true);
+        skr.trust(tub, true);
+        sai.trust(tub, true);
+
+        skr.trust(tap, true);
+        sai.trust(tap, true);
+    }
+}
+
+// Go from W-ETH to Sai via join, lock, draw
+contract SaiSaiSai {  // lol, naming
+    function saisaisai(address tub_, uint jam, uint wad) returns (bytes32) {
+        var tub = TubInterface(tub_);
+
+        // trust could arguably be separated out
+        var gem = TubInterface(tub).gem();
+        var skr = TubInterface(tub).skr();
+        gem.trust(tub, true);
+        skr.trust(tub, true);
+
+        tub.join(jam);
+        var cup = tub.open();
+        tub.lock(cup, jam);
+        tub.draw(cup, wad);
+
+        return cup;
     }
 }
