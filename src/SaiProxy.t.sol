@@ -213,6 +213,11 @@ contract SaiDSProxyTest is SaiTestBase {
         data = msg.data;
         execute();
     }
+    function transfer(address token, address guy, uint wad) external {
+        code = hex"6060604052341561000f57600080fd5b6101968061001e6000396000f30060606040526000357c0100000000000000000000000000000000000000000000000000000000900463ffffffff168063beabacc81461003d57600080fd5b341561004857600080fd5b61009c600480803573ffffffffffffffffffffffffffffffffffffffff1690602001909190803573ffffffffffffffffffffffffffffffffffffffff1690602001909190803590602001909190505061009e565b005b8273ffffffffffffffffffffffffffffffffffffffff1663a9059cbb83836000604051602001526040518363ffffffff167c0100000000000000000000000000000000000000000000000000000000028152600401808373ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200182815260200192505050602060405180830381600087803b151561014957600080fd5b6102c65a03f1151561015a57600080fd5b50505060405180519050505050505600a165627a7a7230582048385d587ebccc99ae6f972db367d9a59f21552cb2c188552423b4c1a6315f260029";
+        data = msg.data;
+        execute();
+    }
 
     function testProxyTrust() public {
         assertTrue(!gem.trusted(proxy, tub));
@@ -335,5 +340,11 @@ contract SaiDSProxyTest is SaiTestBase {
         // put in 10 ether, get 10 skr, lock it all and draw 5 sai
         this.saisaisai(tub, 10 ether, 5 ether);
         assertEq(sai.balanceOf(proxy), 5 ether);
+    }
+
+    function testProxyTransfer() public {
+        assertEq(gem.balanceOf(address(0x1)), 0);
+        this.transfer(gem, address(0x1), 1 ether);
+        assertEq(gem.balanceOf(address(0x1)), 1 ether);
     }
 }

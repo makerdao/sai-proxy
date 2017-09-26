@@ -239,3 +239,10 @@ contract SaiSaiSai {  // lol, naming
         return cup;
     }
 }
+
+// transfer tokens from the proxy to arbitrary places
+contract ProxyTransfer {
+    function transfer(address token, address guy, uint wad) {
+        TokenInterface(token).transfer(guy, wad);
+    }
+}
