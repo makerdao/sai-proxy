@@ -25,6 +25,12 @@ contract TubInterface {
     function tag() returns (uint);
 }
 
+contract TapInterface {
+    function bust(uint);
+    function boom(uint);
+    function cash();
+}
+
 contract TokenInterface {
     function balanceOf(address) returns (uint);
     function approve(address, uint);
@@ -198,6 +204,24 @@ contract SaiWipe {
 contract SaiShut {
     function shut(address tub, bytes32 cup) {
         TubInterface(tub).shut(cup);
+    }
+}
+
+contract SaiBust {
+    function bust(address tap, uint wad) {
+        TapInterface(tap).bust(wad);
+    }
+}
+
+contract SaiBoom {
+    function boom(address tap, uint wad) {
+        TapInterface(tap).boom(wad);
+    }
+}
+
+contract SaiCash {
+    function cash(address tap) {
+        TapInterface(tap).cash();
     }
 }
 
