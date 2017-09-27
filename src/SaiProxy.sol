@@ -28,10 +28,10 @@ contract TubInterface {
 contract TokenInterface {
     function balanceOf(address) returns (uint);
     function approve(address, uint);
+    function trust(address, bool);
     function transfer(address, uint) returns (bool);
     function transferFrom(address, address, uint) returns (bool);
-
-    function trust(address,bool);
+    function withdraw(uint);
 }
 
 contract VoxInterface {
@@ -205,8 +205,8 @@ contract SaiShut {
 /// Multi act proxy functions
 
 // Trust the whole system
-contract SaiTrust {
-    function trust(address tub, address tap) {
+contract SaiTrustAll {
+    function trustAll(address tub, address tap) {
         var gem = TubInterface(tub).gem();
         var skr = TubInterface(tub).skr();
         var sai = TubInterface(tub).sai();
@@ -244,5 +244,29 @@ contract SaiSaiSai {  // lol, naming
 contract ProxyTransfer {
     function transfer(address token, address guy, uint wad) {
         TokenInterface(token).transfer(guy, wad);
+    }
+}
+
+contract ProxyApprove {
+    function approve(address token, address guy, uint wad) {
+        TokenInterface(token).approve(guy, wad);
+    }
+}
+
+contract ProxyTrust {
+    function trust(address token, address guy, bool wat) {
+        TokenInterface(token).trust(guy, wat);
+    }
+}
+
+contract ProxyDeposit {
+    function deposit(address token, uint wad) payable {
+        assert(token.call.value(wad)(bytes4(sha3("deposit()"))));
+    }
+}
+
+contract ProxyWithdraw {
+    function withdraw(address token, uint wad) {
+        TokenInterface(token).withdraw(wad);
     }
 }
