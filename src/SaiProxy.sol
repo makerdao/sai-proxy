@@ -230,17 +230,17 @@ contract SaiCash {
 
 // Trust the whole system
 contract SaiTrustAll {
-    function trustAll(address tub, address tap) {
+    function trustAll(address tub, address tap, bool wat) {
         var gem = TubInterface(tub).gem();
         var skr = TubInterface(tub).skr();
         var sai = TubInterface(tub).sai();
 
-        gem.trust(tub, true);
-        skr.trust(tub, true);
-        sai.trust(tub, true);
+        gem.trust(tub, wat);
+        skr.trust(tub, wat);
+        sai.trust(tub, wat);
 
-        skr.trust(tap, true);
-        sai.trust(tap, true);
+        skr.trust(tap, wat);
+        sai.trust(tap, wat);
     }
 }
 

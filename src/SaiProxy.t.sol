@@ -158,8 +158,8 @@ contract SaiDSProxyTest is SaiTestBase {
     // TODO: we should have some checks that the `code` here is actually
     // the same as that in the deployed contract, otherwise changes to
     // the proxy functions will be ahead of the `code`.
-    function trustAll(address tub, address tap) external {
-        code = hex"6060604052341561000f57600080fd5b6103bf8061001e6000396000f300606060405263ffffffff60e060020a6000350416631e4e56eb811461002357600080fd5b341561002e57600080fd5b610048600160a060020a036004358116906024351661004a565b005b600080600084600160a060020a0316637bd2bea76000604051602001526040518163ffffffff1660e060020a028152600401602060405180830381600087803b151561009557600080fd5b6102c65a03f115156100a657600080fd5b5050506040518051935050600160a060020a038516630f8a771e6000604051602001526040518163ffffffff1660e060020a028152600401602060405180830381600087803b15156100f757600080fd5b6102c65a03f1151561010857600080fd5b5050506040518051925050600160a060020a038516639166cba46000604051602001526040518163ffffffff1660e060020a028152600401602060405180830381600087803b151561015957600080fd5b6102c65a03f1151561016a57600080fd5b5050506040518051915050600160a060020a0383166306262f1b86600160405160e060020a63ffffffff8516028152600160a060020a03909216600483015215156024820152604401600060405180830381600087803b15156101cc57600080fd5b6102c65a03f115156101dd57600080fd5b50505081600160a060020a03166306262f1b86600160405160e060020a63ffffffff8516028152600160a060020a03909216600483015215156024820152604401600060405180830381600087803b151561023757600080fd5b6102c65a03f1151561024857600080fd5b50505080600160a060020a03166306262f1b86600160405160e060020a63ffffffff8516028152600160a060020a03909216600483015215156024820152604401600060405180830381600087803b15156102a257600080fd5b6102c65a03f115156102b357600080fd5b50505081600160a060020a03166306262f1b85600160405160e060020a63ffffffff8516028152600160a060020a03909216600483015215156024820152604401600060405180830381600087803b151561030d57600080fd5b6102c65a03f1151561031e57600080fd5b50505080600160a060020a03166306262f1b85600160405160e060020a63ffffffff8516028152600160a060020a03909216600483015215156024820152604401600060405180830381600087803b151561037857600080fd5b6102c65a03f1151561038957600080fd5b50505050505050505600a165627a7a723058200f9362809e6fc0d5707d2da7bf7696bbf965e061851b984d4e231a783c8b23f60029";
+    function trustAll(address tub, address tap, bool wat) external {
+        code = hex"6060604052341561000f57600080fd5b6103c08061001e6000396000f300606060405263ffffffff60e060020a60003504166343ed0f50811461002357600080fd5b341561002e57600080fd5b61004d600160a060020a0360043581169060243516604435151561004f565b005b600080600085600160a060020a0316637bd2bea76000604051602001526040518163ffffffff1660e060020a028152600401602060405180830381600087803b151561009a57600080fd5b6102c65a03f115156100ab57600080fd5b5050506040518051935050600160a060020a038616630f8a771e6000604051602001526040518163ffffffff1660e060020a028152600401602060405180830381600087803b15156100fc57600080fd5b6102c65a03f1151561010d57600080fd5b5050506040518051925050600160a060020a038616639166cba46000604051602001526040518163ffffffff1660e060020a028152600401602060405180830381600087803b151561015e57600080fd5b6102c65a03f1151561016f57600080fd5b5050506040518051915050600160a060020a0383166306262f1b878660405160e060020a63ffffffff8516028152600160a060020a03909216600483015215156024820152604401600060405180830381600087803b15156101d057600080fd5b6102c65a03f115156101e157600080fd5b50505081600160a060020a03166306262f1b878660405160e060020a63ffffffff8516028152600160a060020a03909216600483015215156024820152604401600060405180830381600087803b151561023a57600080fd5b6102c65a03f1151561024b57600080fd5b50505080600160a060020a03166306262f1b878660405160e060020a63ffffffff8516028152600160a060020a03909216600483015215156024820152604401600060405180830381600087803b15156102a457600080fd5b6102c65a03f115156102b557600080fd5b50505081600160a060020a03166306262f1b868660405160e060020a63ffffffff8516028152600160a060020a03909216600483015215156024820152604401600060405180830381600087803b151561030e57600080fd5b6102c65a03f1151561031f57600080fd5b50505080600160a060020a03166306262f1b868660405160e060020a63ffffffff8516028152600160a060020a03909216600483015215156024820152604401600060405180830381600087803b151561037857600080fd5b6102c65a03f1151561038957600080fd5b5050505050505050505600a165627a7a72305820a236a01f01885f72e9699070c072e0a06226f8dbb1ace097e16f1b906ef225130029";
         data = msg.data;
         execute();
     }
@@ -277,7 +277,7 @@ contract SaiDSProxyTest is SaiTestBase {
         assertTrue(!skr.trusted(proxy, tap));
         assertTrue(!sai.trusted(proxy, tap));
 
-        this.trustAll(tub, tap);
+        this.trustAll(tub, tap, true);
 
         assertTrue(gem.trusted(proxy, tub));
         assertTrue(skr.trusted(proxy, tub));
@@ -285,9 +285,18 @@ contract SaiDSProxyTest is SaiTestBase {
 
         assertTrue(skr.trusted(proxy, tap));
         assertTrue(sai.trusted(proxy, tap));
+
+        this.trustAll(tub, tap, false);
+
+        assertTrue(!gem.trusted(proxy, tub));
+        assertTrue(!skr.trusted(proxy, tub));
+        assertTrue(!sai.trusted(proxy, tub));
+
+        assertTrue(!skr.trusted(proxy, tap));
+        assertTrue(!sai.trusted(proxy, tap));
     }
     function testProxyJoin() public {
-        this.trustAll(tub, tap);
+        this.trustAll(tub, tap, true);
 
         assertEq(skr.balanceOf(proxy),  0 ether);
 
@@ -296,7 +305,7 @@ contract SaiDSProxyTest is SaiTestBase {
         assertEq(skr.balanceOf(proxy), 50 ether);
     }
     function testProxyExit() public {
-        this.trustAll(tub, tap);
+        this.trustAll(tub, tap, true);
         this.join(tub, 50 ether);
 
         assertEq(skr.balanceOf(proxy), 50 ether);
@@ -326,7 +335,7 @@ contract SaiDSProxyTest is SaiTestBase {
         assertEq(tub.lad(cup), this);
     }
     function testProxyLock() public {
-        this.trustAll(tub, tap);
+        this.trustAll(tub, tap, true);
         var cup = this.open(tub);
         this.join(tub, 50 ether);
 
@@ -337,7 +346,7 @@ contract SaiDSProxyTest is SaiTestBase {
         assertEq(tub.ink(cup), 50 ether);
     }
     function testProxyFree() public {
-        this.trustAll(tub, tap);
+        this.trustAll(tub, tap, true);
         var cup = this.open(tub);
         this.join(tub, 50 ether);
         this.lock(tub, cup, 50 ether);
@@ -349,7 +358,7 @@ contract SaiDSProxyTest is SaiTestBase {
         assertEq(tub.ink(cup), 30 ether);
     }
     function testProxyDraw() public {
-        this.trustAll(tub, tap);
+        this.trustAll(tub, tap, true);
         var cup = this.open(tub);
         this.join(tub, 50 ether);
         this.lock(tub, cup, 50 ether);
@@ -361,7 +370,7 @@ contract SaiDSProxyTest is SaiTestBase {
         assertEq(tub.tab(cup), 10 ether);
     }
     function testProxyWipe() public {
-        this.trustAll(tub, tap);
+        this.trustAll(tub, tap, true);
         var cup = this.open(tub);
         this.join(tub, 50 ether);
         this.lock(tub, cup, 50 ether);
@@ -374,7 +383,7 @@ contract SaiDSProxyTest is SaiTestBase {
         assertEq(tub.tab(cup), 7 ether);
     }
     function testProxyShut() public {
-        this.trustAll(tub, tap);
+        this.trustAll(tub, tap, true);
         var cup = this.open(tub);
         this.join(tub, 50 ether);
         this.lock(tub, cup, 50 ether);
@@ -387,7 +396,7 @@ contract SaiDSProxyTest is SaiTestBase {
         assertEq(tub.tab(cup),  0 ether);
     }
     function testProxyBust() public {
-        this.trustAll(tub, tap);
+        this.trustAll(tub, tap, true);
         mom.setHat(100 ether);
         mom.setMat(ray(wdiv(3 ether, 2 ether)));  // 150% liq limit
         mark(2 ether);
@@ -414,7 +423,7 @@ contract SaiDSProxyTest is SaiTestBase {
         assertEq(skr_after - skr_before, 2 ether);
     }
     function testProxyBoom() public {
-        this.trustAll(tub, tap);
+        this.trustAll(tub, tap, true);
         sai.mint(tap, 50 ether);
         this.join(tub, 60 ether);
 
@@ -426,7 +435,7 @@ contract SaiDSProxyTest is SaiTestBase {
         assertEq(tap.joy(), 0);
     }
     function testProxyCash() public {
-        this.trustAll(tub, tap);
+        this.trustAll(tub, tap, true);
         mom.setHat(5 ether);            // 5 sai debt ceiling
         tag.poke(bytes32(1 ether));   // price 1:1 gem:ref
         mom.setMat(ray(2 ether));       // require 200% collat
