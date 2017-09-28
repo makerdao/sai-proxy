@@ -21,7 +21,7 @@ contract TubInterface {
     function chi() returns (uint);
     function tab(bytes32) returns (uint);
     function per() returns (uint);
-    function pip() returns (uint);
+    function pip() returns (PipInterface);
     function tag() returns (uint);
 }
 
@@ -42,6 +42,10 @@ contract TokenInterface {
 
 contract VoxInterface {
     function par() returns (uint);
+}
+
+contract PipInterface {
+    function read() returns (bytes32);
 }
 
 contract SaiProxy is DSThing {
