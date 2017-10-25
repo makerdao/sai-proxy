@@ -12,6 +12,7 @@ contract TubInterface {
     function wipe(bytes32, uint);
     function give(bytes32, address);
     function shut(bytes32);
+    function bite(bytes32);
     function cups(bytes32) returns (address, uint, uint);
     function gem() returns (TokenInterface);
     function gov() returns (TokenInterface);
@@ -211,6 +212,12 @@ contract SaiWipe {
 contract SaiShut {
     function shut(address tub, bytes32 cup) {
         TubInterface(tub).shut(cup);
+    }
+}
+
+contract SaiBite {
+    function bite(address tub, bytes32 cup) {
+        TubInterface(tub).bite(cup);
     }
 }
 
