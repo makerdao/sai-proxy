@@ -14,6 +14,7 @@ contract TubInterface {
     function shut(bytes32);
     function cups(bytes32) returns (address, uint, uint);
     function gem() returns (TokenInterface);
+    function gov() returns (TokenInterface);
     function skr() returns (TokenInterface);
     function sai() returns (TokenInterface);
     function vox() returns (VoxInterface);
@@ -23,12 +24,14 @@ contract TubInterface {
     function per() returns (uint);
     function pip() returns (PipInterface);
     function tag() returns (uint);
+    function drip();
 }
 
 contract TapInterface {
     function bust(uint);
     function boom(uint);
     function cash();
+    function heal();
 }
 
 contract TokenInterface {
@@ -211,6 +214,12 @@ contract SaiShut {
     }
 }
 
+contract SaiDrip {
+    function drip(address tub) {
+        TubInterface(tub).drip();
+    }
+}
+
 contract SaiBust {
     function bust(address tap, uint wad) {
         TapInterface(tap).bust(wad);
@@ -229,6 +238,12 @@ contract SaiCash {
     }
 }
 
+contract SaiHeal {
+    function heal(address tap) {
+        TapInterface(tap).heal();
+    }
+}
+
 
 /// Multi act proxy functions
 
@@ -236,10 +251,12 @@ contract SaiCash {
 contract SaiTrustAll {
     function trustAll(address tub, address tap, bool wat) {
         var gem = TubInterface(tub).gem();
+        var gov = TubInterface(tub).gov();
         var skr = TubInterface(tub).skr();
         var sai = TubInterface(tub).sai();
 
         gem.trust(tub, wat);
+        gov.trust(tub, wat);
         skr.trust(tub, wat);
         sai.trust(tub, wat);
 
@@ -289,7 +306,7 @@ contract ProxyTrust {
 
 contract ProxyDeposit {
     function deposit(address token, uint wad) payable {
-        assert(token.call.value(wad)(bytes4(sha3("deposit()"))));
+        assert(token.call.value(wad)(bytes4(keccak256("deposit()"))));
     }
 }
 
