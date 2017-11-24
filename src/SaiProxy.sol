@@ -281,7 +281,7 @@ contract ProxySaiCustomActions is DSMath {
 // transfer tokens from the proxy to arbitrary places
 contract ProxyTokenActions {
     function transfer(address token, address guy, uint wad) public {
-        TokenInterface(token).transfer(guy, wad);
+        require(TokenInterface(token).transfer(guy, wad));
     }
 
     function approve(address token, address guy, bool wat) public {
