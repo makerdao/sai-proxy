@@ -79,9 +79,8 @@ contract PipInterface {
 
 contract ProxySaiBasicActions {
     function join(address tub, uint wad) public {
-        var ink = TubInterface(tub).ask(wad);
         if (TubInterface(tub).gem().allowance(this, tub) != uint(-1)) {
-            TubInterface(tub).gem().approve(tub, ink);
+            TubInterface(tub).gem().approve(tub, uint(-1));
         }
         TubInterface(tub).join(wad);
     }
