@@ -22,7 +22,7 @@ contract SaiDSProxyTest is SaiTestBase {
         basicActions = address(new ProxySaiBasicActions());
         customActions = address(new ProxySaiCustomActions());
         tokenActions = address(new ProxyTokenActions());
-        mom.setHat(1000 ether);
+        mom.setCap(1000 ether);
         gem.mint(900 ether);
         gem.push(proxy, 100 ether);
     }
@@ -96,6 +96,11 @@ contract SaiDSProxyTest is SaiTestBase {
     }
 
     function cash(address tap, uint wad) external {
+        tap;wad;
+        proxy.execute(basicActions, msg.data);
+    }
+
+    function mock(address tap, uint wad) external {
         tap;wad;
         proxy.execute(basicActions, msg.data);
     }
@@ -175,6 +180,7 @@ contract SaiDSProxyTest is SaiTestBase {
         assertTrue(skr.allowance(proxy, tub) == 0);
         assertTrue(sai.allowance(proxy, tub) == 0);
 
+        assertTrue(gem.allowance(proxy, tap) == 0);
         assertTrue(skr.allowance(proxy, tap) == 0);
         assertTrue(sai.allowance(proxy, tap) == 0);
 
@@ -185,6 +191,7 @@ contract SaiDSProxyTest is SaiTestBase {
         assertTrue(skr.allowance(proxy, tub) == uint(-1));
         assertTrue(sai.allowance(proxy, tub) == uint(-1));
 
+        assertTrue(gem.allowance(proxy, tap) == uint(-1));
         assertTrue(skr.allowance(proxy, tap) == uint(-1));
         assertTrue(sai.allowance(proxy, tap) == uint(-1));
 
@@ -195,6 +202,7 @@ contract SaiDSProxyTest is SaiTestBase {
         assertTrue(skr.allowance(proxy, tub) == 0);
         assertTrue(sai.allowance(proxy, tub) == 0);
 
+        assertTrue(gem.allowance(proxy, tap) == 0);
         assertTrue(skr.allowance(proxy, tap) == 0);
         assertTrue(sai.allowance(proxy, tap) == 0);
     }
@@ -301,7 +309,7 @@ contract SaiDSProxyTest is SaiTestBase {
     }
 
     function testProxyBust() public {
-        mom.setHat(100 ether);
+        mom.setCap(100 ether);
         mom.setMat(ray(wdiv(3 ether, 2 ether)));  // 150% liq limit
         mark(2 ether);
 
@@ -340,8 +348,8 @@ contract SaiDSProxyTest is SaiTestBase {
     }
 
     function testProxyCash() public {
-        mom.setHat(5 ether);            // 5 sai debt ceiling
-        tag.poke(bytes32(1 ether));   // price 1:1 gem:ref
+        mom.setCap(5 ether);            // 5 sai debt ceiling
+        pip.poke(bytes32(1 ether));   // price 1:1 gem:ref
         mom.setMat(ray(2 ether));       // require 200% collat
         this.join(tub, 10 ether);
         var cup = this.open(tub);
@@ -357,6 +365,12 @@ contract SaiDSProxyTest is SaiTestBase {
         this.cash(tap, sai.balanceOf(proxy));
         assertEq(sai.balanceOf(proxy),   0 ether);
         assertEq(skr.balanceOf(proxy),   0 ether);
+    }
+
+    function testProxyMock() public {
+        testProxyCash();
+        this.mock(tap, 5 ether);
+        assertEq(sai.balanceOf(proxy), 5 ether);
     }
 
     function testProxyDrawAmount() public {

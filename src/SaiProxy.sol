@@ -32,9 +32,11 @@ contract TubInterface {
 contract TapInterface {
     function skr() public returns (TokenInterface);
     function sai() public returns (TokenInterface);
+    function tub() public returns (TubInterface);
     function bust(uint) public;
     function boom(uint) public;
     function cash(uint) public;
+    function mock(uint) public;
     function heal() public;
 }
 
@@ -78,14 +80,14 @@ contract PipInterface {
 contract ProxySaiBasicActions {
     function join(address tub, uint wad) public {
         var ink = TubInterface(tub).ask(wad);
-        if (TubInterface(tub).gem().allowance(this, tub) < ink) {
+        if (TubInterface(tub).gem().allowance(this, tub) != uint(-1)) {
             TubInterface(tub).gem().approve(tub, ink);
         }
         TubInterface(tub).join(wad);
     }
 
     function exit(address tub, uint wad) public {
-        if (TubInterface(tub).skr().allowance(this, tub) == 0) {
+        if (TubInterface(tub).skr().allowance(this, tub) != uint(-1)) {
             TubInterface(tub).skr().approve(tub, uint(-1));
         }
         TubInterface(tub).exit(wad);
@@ -100,7 +102,7 @@ contract ProxySaiBasicActions {
     }
 
     function lock(address tub, bytes32 cup, uint wad) public {
-        if (TubInterface(tub).skr().allowance(this, tub) == 0) {
+        if (TubInterface(tub).skr().allowance(this, tub) != uint(-1)) {
             TubInterface(tub).skr().approve(tub, uint(-1));
         }
         TubInterface(tub).lock(cup, wad);
@@ -115,20 +117,20 @@ contract ProxySaiBasicActions {
     }
 
     function wipe(address tub, bytes32 cup, uint wad) public {
-        if (TubInterface(tub).sai().allowance(this, tub) == 0) {
+        if (TubInterface(tub).sai().allowance(this, tub) != uint(-1)) {
             TubInterface(tub).sai().approve(tub, uint(-1));
         }
-        if (TubInterface(tub).gov().allowance(this, tub) == 0) {
+        if (TubInterface(tub).gov().allowance(this, tub) != uint(-1)) {
             TubInterface(tub).gov().approve(tub, uint(-1));
         }
         TubInterface(tub).wipe(cup, wad);
     }
 
     function shut(address tub, bytes32 cup) public {
-        if (TubInterface(tub).sai().allowance(this, tub) == 0) {
+        if (TubInterface(tub).sai().allowance(this, tub) != uint(-1)) {
             TubInterface(tub).sai().approve(tub, uint(-1));
         }
-        if (TubInterface(tub).gov().allowance(this, tub) == 0) {
+        if (TubInterface(tub).gov().allowance(this, tub) != uint(-1)) {
             TubInterface(tub).gov().approve(tub, uint(-1));
         }
         TubInterface(tub).shut(cup);
@@ -143,24 +145,31 @@ contract ProxySaiBasicActions {
     }
 
     function bust(address tap, uint wad) public {
-        if (TapInterface(tap).sai().allowance(this, tap) == 0) {
+        if (TapInterface(tap).sai().allowance(this, tap) != uint(-1)) {
             TapInterface(tap).sai().approve(tap, uint(-1));
         }
         TapInterface(tap).bust(wad);
     }
 
     function boom(address tap, uint wad) public {
-        if (TapInterface(tap).skr().allowance(this, tap) == 0) {
+        if (TapInterface(tap).skr().allowance(this, tap) != uint(-1)) {
             TapInterface(tap).skr().approve(tap, uint(-1));
         }
         TapInterface(tap).boom(wad);
     }
 
     function cash(address tap, uint wad) public {
-        if (TapInterface(tap).sai().allowance(this, tap) == 0) {
+        if (TapInterface(tap).sai().allowance(this, tap) != uint(-1)) {
             TapInterface(tap).sai().approve(tap, uint(-1));
         }
         TapInterface(tap).cash(wad);
+    }
+
+    function mock(address tap, uint wad) public {
+        if (TapInterface(tap).tub().gem().allowance(this, tap) != uint(-1)) {
+            TapInterface(tap).tub().gem().approve(tap, uint(-1));
+        }
+        TapInterface(tap).mock(wad);
     }
 
     function heal(address tap) public {
@@ -177,11 +186,10 @@ contract ProxySaiCustomActions is DSMath {
     function drawAmount(address tub_, uint jam, uint wad) public returns (bytes32) {
         var tub = TubInterface(tub_);
 
-        var ink = tub.ask(jam);
-        if (tub.gem().allowance(this, tub) < ink) {
-            tub.gem().approve(tub, ink);
+        if (tub.gem().allowance(this, tub) != uint(-1)) {
+            tub.gem().approve(tub, uint(-1));
         }
-        if (tub.skr().allowance(this, tub) == 0) {
+        if (tub.skr().allowance(this, tub) != uint(-1)) {
             tub.skr().approve(tub, uint(-1));
         }
 
@@ -273,6 +281,7 @@ contract ProxySaiCustomActions is DSMath {
         skr.approve(tub, wat ? uint(-1) : uint(0));
         sai.approve(tub, wat ? uint(-1) : uint(0));
 
+        gem.approve(tap, wat ? uint(-1) : uint(0));
         skr.approve(tap, wat ? uint(-1) : uint(0));
         sai.approve(tap, wat ? uint(-1) : uint(0));
     }
