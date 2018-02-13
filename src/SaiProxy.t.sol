@@ -140,6 +140,11 @@ contract SaiDSProxyTest is SaiTestBase {
         proxy.execute(customActions, msg.data);
     }
 
+    function drawAmount(address tub, bytes32 cup, uint jam, uint wad) external {
+        tub;cup;jam;wad;
+        proxy.execute(customActions, msg.data);
+    }
+
     function drawAmountAtMargin(address tub, bytes32 cup, uint wad, uint mat) external {
         tub;cup;wad;mat;
         proxy.execute(customActions, msg.data);
@@ -376,6 +381,13 @@ contract SaiDSProxyTest is SaiTestBase {
     function testProxyDrawAmount() public {
         // put in 10 ether, get 10 skr, lock it all and draw 5 sai
         this.drawAmount(tub, 10 ether, 5 ether);
+        assertEq(sai.balanceOf(proxy), 5 ether);
+    }
+
+    function testProxyDrawAmountCupCreated() public {
+        // put in 10 ether, get 10 skr, lock it all and draw 5 sai
+        this.open(tub);
+        this.drawAmount(tub, 1, 10 ether, 5 ether);
         assertEq(sai.balanceOf(proxy), 5 ether);
     }
 

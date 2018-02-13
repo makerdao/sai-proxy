@@ -182,7 +182,15 @@ contract ProxySaiBasicActions {
 // Approve the whole system
 contract ProxySaiCustomActions is DSMath {
     // Go from W-ETH to Sai via join, lock, draw
-    function drawAmount(address tub_, uint jam, uint wad) public returns (bytes32) {
+    function drawAmount(address tub_, uint jam, uint wad) public returns (bytes32 cup) {
+        var tub = TubInterface(tub_);
+        cup = tub.open();
+        drawAmount(tub_, cup, jam, wad);
+
+        return cup;
+    }
+
+    function drawAmount(address tub_, bytes32 cup, uint jam, uint wad) public {
         var tub = TubInterface(tub_);
 
         if (tub.gem().allowance(this, tub) != uint(-1)) {
@@ -193,13 +201,10 @@ contract ProxySaiCustomActions is DSMath {
         }
 
         tub.join(jam);
-        var cup = tub.open();
         tub.lock(cup, jam);
         tub.draw(cup, wad);
-
-        return cup;
     }
-    
+
     function processInk(TubInterface tub, bytes32 cup, uint wad, uint mat) internal {
         // Calculate necessary SKR for specific 'wad' amount of SAI and leave CDP with 'mat' percentage collateralized
         uint ink = wdiv(rmul(wmul(tub.vox().par(), rmul(wad, tub.chi())), mat), tub.tag());
