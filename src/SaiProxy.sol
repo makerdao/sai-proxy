@@ -23,8 +23,10 @@ contract TubInterface {
     function mat() public returns (uint);
     function chi() public returns (uint);
     function tab(bytes32) public returns (uint);
+    function rap(bytes32) public returns (uint);
     function per() public returns (uint);
     function pip() public returns (PipInterface);
+    function pep() public returns (PepInterface);
     function tag() public returns (uint);
     function drip() public;
 }
@@ -46,6 +48,7 @@ contract TokenInterface {
     function approve(address, uint) public;
     function transfer(address, uint) public returns (bool);
     function transferFrom(address, address, uint) public returns (bool);
+    function deposit() public payable;
     function withdraw(uint) public;
 }
 
@@ -55,6 +58,10 @@ contract VoxInterface {
 
 contract PipInterface {
     function read() public returns (bytes32);
+}
+
+contract PepInterface {
+    function peek() public returns (bytes32, bool);
 }
 
 // Writing more proxy functions: for now these need to not take any
@@ -72,11 +79,8 @@ contract PipInterface {
 // and then copy the contents of e.g. `out/SaiDraw.bin` to where it will
 // be used.
 
-/// Single act proxy functions for the base acts
 
-// n.b. if you change these, you need to update the corresponding `code`
-// in the tests :s
-
+/// Single act proxy functions for the base acts (assumes proxy as funds holder - no `transferFrom` from account)
 contract ProxySaiBasicActions {
     function join(address tub, uint wad) public {
         if (TubInterface(tub).gem().allowance(this, tub) != uint(-1)) {
@@ -177,121 +181,74 @@ contract ProxySaiBasicActions {
 }
 
 
-/// Multi act proxy functions
-
-// Approve the whole system
+/// Multi act proxy functions (assumes account as holder)
 contract ProxySaiCustomActions is DSMath {
-    // Go from W-ETH to Sai via join, lock, draw
-    function drawAmount(address tub_, uint jam, uint wad) public returns (bytes32 cup) {
-        var tub = TubInterface(tub_);
-        cup = tub.open();
-        drawAmount(tub_, cup, jam, wad);
+    function lock(address tub_, bytes32 cup) public payable {
+        TubInterface tub = TubInterface(tub_);
 
-        return cup;
-    }
+        tub.gem().deposit.value(msg.value)();
 
-    function drawAmount(address tub_, bytes32 cup, uint jam, uint wad) public {
-        var tub = TubInterface(tub_);
-
+        uint jam = rmul(msg.value, tub.per());
         if (tub.gem().allowance(this, tub) != uint(-1)) {
             tub.gem().approve(tub, uint(-1));
         }
+        tub.join(jam);
+
         if (tub.skr().allowance(this, tub) != uint(-1)) {
             tub.skr().approve(tub, uint(-1));
         }
-
-        tub.join(jam);
         tub.lock(cup, jam);
-        tub.draw(cup, wad);
     }
 
-    function processInk(TubInterface tub, bytes32 cup, uint wad, uint mat) internal {
-        // Calculate necessary SKR for specific 'wad' amount of SAI and leave CDP with 'mat' percentage collateralized
-        uint ink = wdiv(rmul(wmul(tub.vox().par(), rmul(wad, tub.chi())), mat), tub.tag());
-        var (,cink,,) = tub.cups(cup);
-        // Check if SKR needs to be locked or freed
-        if (ink > cink) {
-            // Check if there is already skr in balance to be locked
-            if (sub(ink, cink) > tub.skr().balanceOf(this)) {
-                // Change GEM to SKR via 'join'
-                var jam = rmul(sub(sub(ink, cink), tub.skr().balanceOf(this)), tub.per());
-                tub.gem().approve(tub, jam);
-                tub.join(jam);
-            }
-            // Lock SKR
-            tub.skr().approve(tub, uint(-1));
-            tub.lock(cup, sub(ink, cink));
-        } else if (cink > ink) {
-            tub.free(cup, sub(cink, ink));
+    function draw(address tub_, bytes32 cup, uint wad) public {
+        TubInterface tub = TubInterface(tub_);
+        tub.draw(cup, wad);
+        tub.sai().transfer(msg.sender, wad);
+    }
+
+    function wipe(address tub_, bytes32 cup, uint wad) public {
+        TubInterface tub = TubInterface(tub_);
+
+        tub.sai().transferFrom(msg.sender, this, wad);
+        bytes32 val;
+        bool ok;
+        (val, ok) = tub.pep().peek();
+        if (ok && val != 0) tub.gov().transferFrom(msg.sender, this, wdiv(rmul(wad, rdiv(tub.rap(cup), tub.tab(cup))), uint(val)));
+
+        if (tub.sai().allowance(this, tub) != uint(-1)) {
+            tub.sai().approve(tub, uint(-1));
         }
-    }
-
-    /**
-    * Draws 'wad' amount of SAI locking enough SKR to keep the CDP with 'mat' percentage of collateralization (in an existing CDP)
-    *
-    * @param    tub    TUB Address
-    * @param    cup    CUP ID (CDP)
-    * @param    wad    Amount of SAI to draw
-    * @param    mat    collateralization of CDP after drawing
-    */
-    function drawAmountAtMargin(TubInterface tub, bytes32 cup, uint wad, uint mat) public {
-        // Require desired 'mat' is equal or higher than minimum defined in TUB
-        require(mat >= tub.mat());
-        // Bring cup values
-        var (,,cart,) = tub.cups(cup);
-        processInk(tub, cup, add(rdiv(wad, tub.chi()), cart), mat);
-        tub.draw(cup, wad);
-    }
-
-    /**
-    * Draws 'wad' amount of SAI locking enough SKR to keep the CDP with 'mat' percentage of collateralization (creating a new CDP)
-    *
-    * @param    tub    TUB Address
-    * @param    wad    Amount of SAI to draw
-    * @param    mat    collateralization of CDP after drawing
-    */
-    function drawAmountAtMargin(TubInterface tub, uint wad, uint mat) public {
-        var cup = tub.open();
-        drawAmountAtMargin(tub, cup, wad, mat);
-    }
-
-    /**
-    * Wipes 'wad' amount of SAI leaving enough locked SKR to keep the CDP with 'mat' percentage of collateralization
-    *
-    * @param    tub    TUB Address
-    * @param    cup    CUP ID (CDP)
-    * @param    wad    Amount of SAI to wipe
-    * @param    mat    collateralization of CDP after wiping
-    */
-    function wipeAmountAtMargin(TubInterface tub, bytes32 cup, uint wad, uint mat) public {
-        // Require desired 'mat' is equal or higher than minimum defined in TUB
-        require(mat >= tub.mat());
-        // Bring cup values
-        var (,,cart) = tub.cups(cup);
-        assert(cart >= rdiv(wad, tub.chi()));
-        tub.sai().approve(tub, wad);
+        if (tub.gov().allowance(this, tub) != uint(-1)) {
+            tub.gov().approve(tub, uint(-1));
+        }
         tub.wipe(cup, wad);
-        processInk(tub, cup, sub(cart, rdiv(wad, tub.chi())), mat);
     }
 
-    function approveAll(address tub, address tap, bool wat) public {
-        var gem = TubInterface(tub).gem();
-        var gov = TubInterface(tub).gov();
-        var skr = TubInterface(tub).skr();
-        var sai = TubInterface(tub).sai();
+    function free(address tub_, bytes32 cup, uint jam) public {
+        TubInterface tub = TubInterface(tub_);
+        tub.free(cup, rdiv(jam, tub.per()));
+        tub.exit(jam);
+        tub.gem().withdraw(jam);
+        address(msg.sender).transfer(jam);
+    }
 
-        gem.approve(tub, wat ? uint(-1) : uint(0));
-        gov.approve(tub, wat ? uint(-1) : uint(0));
-        skr.approve(tub, wat ? uint(-1) : uint(0));
-        sai.approve(tub, wat ? uint(-1) : uint(0));
+    function lockAndDraw(address tub_, bytes32 cup, uint wad) public payable {
+        lock(tub_, cup);
+        draw(tub_, cup, wad);
+    }
 
-        gem.approve(tap, wat ? uint(-1) : uint(0));
-        skr.approve(tap, wat ? uint(-1) : uint(0));
-        sai.approve(tap, wat ? uint(-1) : uint(0));
+    function lockAndDraw(address tub_, uint wad) public payable returns (bytes32 cup) {
+        cup = TubInterface(tub_).open();
+        lockAndDraw(tub_, cup, wad);
+        return cup;
+    }
+
+    function wipeAndFree(address tub_, bytes32 cup, uint jam, uint wad) public payable {
+        wipe(tub_, cup, wad);
+        free(tub_, cup, jam);
     }
 }
 
-// transfer tokens from the proxy to arbitrary places
 contract ProxyTokenActions {
     function transfer(address token, address guy, uint wad) public {
         require(TokenInterface(token).transfer(guy, wad));
@@ -305,8 +262,8 @@ contract ProxyTokenActions {
         TokenInterface(token).approve(guy, wad);
     }
 
-    function deposit(address token, uint wad) public payable {
-        assert(token.call.value(wad)(bytes4(keccak256("deposit()"))));
+    function deposit(address token) public payable {
+        TokenInterface(token).deposit.value(msg.value)();
     }
 
     function withdraw(address token, uint wad) public {
