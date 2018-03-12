@@ -188,16 +188,16 @@ contract ProxySaiCustomActions is DSMath {
 
         tub.gem().deposit.value(msg.value)();
 
-        uint jam = rmul(msg.value, tub.per());
+        uint ink = rdiv(msg.value, tub.per());
         if (tub.gem().allowance(this, tub) != uint(-1)) {
             tub.gem().approve(tub, uint(-1));
         }
-        tub.join(jam);
+        tub.join(ink);
 
         if (tub.skr().allowance(this, tub) != uint(-1)) {
             tub.skr().approve(tub, uint(-1));
         }
-        tub.lock(cup, jam);
+        tub.lock(cup, ink);
     }
 
     function draw(address tub_, bytes32 cup, uint wad) public {
@@ -226,8 +226,9 @@ contract ProxySaiCustomActions is DSMath {
 
     function free(address tub_, bytes32 cup, uint jam) public {
         TubInterface tub = TubInterface(tub_);
-        tub.free(cup, rdiv(jam, tub.per()));
-        tub.exit(jam);
+        uint ink = rdiv(jam, tub.per());
+        tub.free(cup, ink);
+        tub.exit(ink);
         tub.gem().withdraw(jam);
         address(msg.sender).transfer(jam);
     }
