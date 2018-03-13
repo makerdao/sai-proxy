@@ -1,4 +1,4 @@
-pragma solidity ^0.4.16;
+pragma solidity ^0.4.20;
 
 import "ds-test/test.sol";
 import "ds-proxy/proxy.sol";
@@ -22,7 +22,7 @@ contract WETH is DSToken {
     }
 }
 
-contract SaiDSProxyTest is DSTest, DSMath {
+contract SaiProxyTest is DSTest, DSMath {
     DevVox   vox;
     DevTub   tub;
     DevTop   top;
@@ -43,9 +43,7 @@ contract SaiDSProxyTest is DSTest, DSMath {
     DSRoles  dad;
 
     DSProxy proxy;
-    address basicActions;
-    address customActions;
-    address tokenActions;
+    address saiProxy;
 
     function ray(uint256 wad) internal pure returns (uint256) {
         return wad * 10 ** 9;
@@ -119,9 +117,7 @@ contract SaiDSProxyTest is DSTest, DSMath {
         DSProxyFactory factory = new DSProxyFactory();
         proxy = factory.build();
 
-        basicActions = address(new ProxySaiBasicActions());
-        customActions = address(new ProxySaiCustomActions());
-        tokenActions = address(new ProxyTokenActions());
+        saiProxy = address(new SaiProxy());
         mom.setCap(1000 ether);
         gem.deposit.value(1000 ether)();
         gem.push(proxy, 100 ether);
@@ -136,154 +132,57 @@ contract SaiDSProxyTest is DSTest, DSMath {
     // The main reason for the `this.foo` abstraction is easy
     // construction of the correct calldata.
 
-    function join(address tub_, uint wad_) external {
-        tub_;wad_;
-        proxy.execute(basicActions, msg.data);
-    }
-    function exit(address tub_, uint wad_) external {
-        tub_;wad_;
-        proxy.execute(basicActions, msg.data);
-    }
-
     function open(address tub_) external returns (bytes32 cup) {
         tub_;
-        cup = proxy.execute(basicActions, msg.data);
+        cup = proxy.execute(saiProxy, msg.data);
     }
 
-    function give(address tub_, bytes32 cup, address lad) external {
-        tub_;cup;lad;
-        proxy.execute(basicActions, msg.data);
+    function give(address tub_, bytes32 cup_, address lad_) external {
+        tub_;cup_;lad_;
+        proxy.execute(saiProxy, msg.data);
     }
 
-    function lock(address tub_, bytes32 cup, uint wad_) external {
-        tub_;cup;wad_;
-        proxy.execute(basicActions, msg.data);
+    function lock(address tub_, bytes32 cup_) external payable {
+        tub_;cup_;
+        assert(address(proxy).call.value(msg.value)(bytes4(keccak256("execute(address,bytes)")), saiProxy, uint256(0x40), msg.data.length, msg.data));
     }
 
-    function free(address tub_, bytes32 cup, uint wad_) external {
-        tub_;cup;wad_;
-        proxy.execute(basicActions, msg.data);
+    function draw(address tub_, bytes32 cup_, uint wad_) external {
+        tub_;cup_;wad_;
+        proxy.execute(saiProxy, msg.data);
     }
 
-    function draw(address tub_, bytes32 cup, uint wad_) external {
-        tub_;cup;wad_;
-        proxy.execute(basicActions, msg.data);
+    function wipe(address tub_, bytes32 cup_, uint wad_) external {
+        tub_;cup_;wad_;
+        proxy.execute(saiProxy, msg.data);
     }
 
-    function wipe(address tub_, bytes32 cup, uint wad_) external {
-        tub_;cup;wad_;
-        proxy.execute(basicActions, msg.data);
+    function free(address tub_, bytes32 cup_, uint wad_) external {
+        tub_;cup_;wad_;
+        proxy.execute(saiProxy, msg.data);
     }
 
-    function shut(address tub_, bytes32 cup) external {
-        tub_;cup;
-        proxy.execute(basicActions, msg.data);
-    }
-
-    function bite(address tub_, bytes32 cup) external {
-        tub_;cup;
-        proxy.execute(basicActions, msg.data);
-    }
-
-    function bust(address tap_, uint wad_) external {
-        tap_;wad_;
-        proxy.execute(basicActions, msg.data);
-    }
-
-    function boom(address tap_, uint wad_) external {
-        tap_;wad_;
-        proxy.execute(basicActions, msg.data);
-    }
-
-    function cash(address tap_, uint wad_) external {
-        tap_;wad_;
-        proxy.execute(basicActions, msg.data);
-    }
-
-    function mock(address tap_, uint wad_) external {
-        tap_;wad_;
-        proxy.execute(basicActions, msg.data);
-    }
-
-    function approve(address tub_, address guy, uint wad_) external {
-        tub_;guy;wad_;
-        proxy.execute(tokenActions, msg.data);
-    }
-
-    function approve(address token, address guy, bool wat) external {
-        token;guy;wat;
-        proxy.execute(tokenActions, msg.data);
-    }
-
-    function transfer(address token, address guy, uint wad_) external {
-        token;guy;wad_;
-        proxy.execute(tokenActions, msg.data);
-    }
-
-    function deposit(address token, uint wad_) external {
-        token;wad_;
-        proxy.execute(tokenActions, msg.data);
-    }
-
-    function withdraw(address token, uint wad_) external {
-        token;wad_;
-        proxy.execute(tokenActions, msg.data);
+    function lockAndDraw(address tub_, bytes32 cup_, uint wad_) external payable {
+        tub_;cup_;wad_;
+        assert(address(proxy).call.value(msg.value)(bytes4(keccak256("execute(address,bytes)")), saiProxy, uint256(0x40), msg.data.length, msg.data));
     }
 
     function lockAndDraw(address tub_, uint wad_) external payable {
         tub_;wad_;
-        assert(address(proxy).call.value(msg.value)(bytes4(keccak256("execute(address,bytes)")), customActions, uint256(0x40), msg.data.length, msg.data));
+        assert(address(proxy).call.value(msg.value)(bytes4(keccak256("execute(address,bytes)")), saiProxy, uint256(0x40), msg.data.length, msg.data));
     }
 
-    function lockAndDraw(address tub_, bytes32 cup, uint wad_) external payable {
-        tub_;cup;wad_;
-        assert(address(proxy).call.value(msg.value)(bytes4(keccak256("execute(address,bytes)")), customActions, uint256(0x40), msg.data.length, msg.data));
+    function wipeAndFree(address tub_, bytes32 cup_, uint jam_, uint wad_) external payable {
+        tub_;cup_;jam_;wad_;
+        proxy.execute(saiProxy, msg.data);
     }
 
-    function wipeAndFree(address tub_, bytes32 cup, uint jam, uint wad_) external payable {
-        tub_;cup;jam;wad_;
-        proxy.execute(customActions, msg.data);
+    function shut(address tub_, bytes32 cup_) external {
+        tub_;cup_;
+        proxy.execute(saiProxy, msg.data);
     }
 
-    function testProxyApproveBoolean() public {
-        assertTrue(gem.allowance(proxy, tub) == 0);
-        this.approve(gem, tub, true);
-        assertTrue(gem.allowance(proxy, tub) == uint(-1));
-    }
-
-    function testProxyApprove() public {
-        assertEq(gem.allowance(proxy, tub), 0);
-        this.approve(gem, tub, 10);
-        assertEq(gem.allowance(proxy, tub), 10);
-    }
-
-    function testProxyTransfer() public {
-        assertEq(gem.balanceOf(address(0x1)), 0);
-        this.transfer(gem, address(0x1), 1 ether);
-        assertEq(gem.balanceOf(address(0x1)), 1 ether);
-    }
-
-    function testProxyJoin() public {
-        assertEq(skr.balanceOf(proxy),  0 ether);
-
-        this.join(tub, 50 ether);
-
-        assertEq(skr.balanceOf(proxy), 50 ether);
-    }
-
-    function testProxyExit() public {
-        this.join(tub, 50 ether);
-
-        assertEq(skr.balanceOf(proxy), 50 ether);
-        assertEq(gem.balanceOf(proxy), 50 ether);
-
-        this.exit(tub, 10 ether);
-
-        assertEq(skr.balanceOf(proxy), 40 ether);
-        assertEq(gem.balanceOf(proxy), 60 ether);
-    }
-
-    function testProxyOpen() public {
+    function testSaiProxyOpen() public {
         bytes32 cup1 = this.open(tub);
         assertEq(cup1, bytes32(1));
 
@@ -295,7 +194,7 @@ contract SaiDSProxyTest is DSTest, DSMath {
         assertEq(cup2, bytes32(2));
     }
 
-    function testProxyGive() public {
+    function testSaiProxyGive() public {
         bytes32 cup = this.open(tub);
 
         assertEq(tub.lad(cup), proxy);
@@ -303,140 +202,52 @@ contract SaiDSProxyTest is DSTest, DSMath {
         assertEq(tub.lad(cup), this);
     }
 
-    function testProxyLock() public {
+    function testSaiProxyLock() public {
         bytes32 cup = this.open(tub);
-        this.join(tub, 50 ether);
+        this.lock.value(50 ether)(tub, cup);
 
-        assertEq(skr.balanceOf(proxy), 50 ether);
-        assertEq(tub.ink(cup), 0);
-        this.lock(tub, cup, 50 ether);
+        assertEq(skr.balanceOf(this),  0 ether);
         assertEq(skr.balanceOf(proxy),  0 ether);
         assertEq(tub.ink(cup), 50 ether);
     }
 
-    function testProxyFree() public {
+    function testSaiProxyDraw() public {
         bytes32 cup = this.open(tub);
-        this.join(tub, 50 ether);
-        this.lock(tub, cup, 50 ether);
+        this.lock.value(50 ether)(tub, cup);
 
-        assertEq(skr.balanceOf(proxy), 0 ether);
-        assertEq(tub.ink(cup), 50 ether);
-        this.free(tub, cup, 20 ether);
-        assertEq(skr.balanceOf(proxy), 20 ether);
-        assertEq(tub.ink(cup), 30 ether);
-    }
-
-    function testProxyDraw() public {
-        bytes32 cup = this.open(tub);
-        this.join(tub, 50 ether);
-        this.lock(tub, cup, 50 ether);
-
+        assertEq(sai.balanceOf(this),  0 ether);
         assertEq(sai.balanceOf(proxy),  0 ether);
         assertEq(tub.tab(cup),  0 ether);
         this.draw(tub, cup, 10 ether);
-        assertEq(sai.balanceOf(proxy), 10 ether);
+        assertEq(sai.balanceOf(this), 10 ether);
+        assertEq(sai.balanceOf(proxy), 0 ether);
         assertEq(tub.tab(cup), 10 ether);
     }
 
-    function testProxyWipe() public {
+    function testSaiProxyWipe() public {
         bytes32 cup = this.open(tub);
-        this.join(tub, 50 ether);
-        this.lock(tub, cup, 50 ether);
+        this.lock.value(50 ether)(tub, cup);
         this.draw(tub, cup, 10 ether);
 
-        assertEq(sai.balanceOf(proxy), 10 ether);
+        assertEq(sai.balanceOf(this), 10 ether);
         assertEq(tub.tab(cup), 10 ether);
+        sai.approve(proxy, uint(-1));
         this.wipe(tub, cup, 3 ether);
-        assertEq(sai.balanceOf(proxy),  7 ether);
+        assertEq(sai.balanceOf(this),  7 ether);
         assertEq(tub.tab(cup), 7 ether);
     }
 
-    function testProxyShut() public {
+    function testSaiProxyFree() public {
         bytes32 cup = this.open(tub);
-        this.join(tub, 50 ether);
-        this.lock(tub, cup, 50 ether);
-        this.draw(tub, cup, 10 ether);
-
+        this.lock.value(50 ether)(tub, cup);
         assertEq(tub.ink(cup), 50 ether);
-        assertEq(tub.tab(cup), 10 ether);
-        this.shut(tub, cup);
-        assertEq(tub.ink(cup),  0 ether);
-        assertEq(tub.tab(cup),  0 ether);
-    }
-
-    function testProxyBust() public {
-        mom.setCap(100 ether);
-        mom.setMat(ray(wdiv(3 ether, 2 ether)));  // 150% liq limit
-        mark(2 ether);
-
-        this.join(tub, 10 ether);
-        bytes32 cup = this.open(tub);
-        this.lock(tub, cup, 10 ether);
-
-        mark(3 ether);
-        this.draw(tub, cup, 16 ether);  // 125% collat
-        mark(2 ether);
-
-        assertTrue(!tub.safe(cup));
-        tub.bite(cup);
-
-        // get 2 skr, pay 4 sai (25% of the debt)
-        uint sai_before = sai.balanceOf(proxy);
-        uint skr_before = skr.balanceOf(proxy);
-        assertEq(sai_before, 16 ether);
-        this.bust(tap, 2 ether);
-        uint sai_after = sai.balanceOf(proxy);
-        uint skr_after = skr.balanceOf(proxy);
-        assertEq(sai_before - sai_after, 4 ether);
-        assertEq(skr_after - skr_before, 2 ether);
-    }
-
-    function testProxyBoom() public {
-        sai.mint(tap, 50 ether);
-        this.join(tub, 60 ether);
-
-        assertEq(sai.balanceOf(proxy),  0 ether);
-        assertEq(skr.balanceOf(proxy), 60 ether);
-        this.boom(tap, 50 ether);
-        assertEq(sai.balanceOf(proxy), 50 ether);
-        assertEq(skr.balanceOf(proxy), 10 ether);
-        assertEq(tap.joy(), 0);
-    }
-
-    function testProxyCash() public {
-        mom.setCap(5 ether);            // 5 sai debt ceiling
-        pip.poke(bytes32(1 ether));   // price 1:1 gem:ref
-        mom.setMat(ray(2 ether));       // require 200% collat
-        this.join(tub, 10 ether);
-        bytes32 cup = this.open(tub);
-        this.lock(tub, cup, 10 ether);
-        this.draw(tub, cup, 5 ether);
-        uint price = wdiv(1 ether, 2 ether);  // 100% collat
-        mark(price);
-        top.cage();
-
-        assertEq(sai.balanceOf(proxy),  5 ether);
-        assertEq(skr.balanceOf(proxy),  0 ether);
-        assertEq(gem.balanceOf(proxy), 90 ether);
-        this.cash(tap, sai.balanceOf(proxy));
-        assertEq(sai.balanceOf(proxy),   0 ether);
-        assertEq(skr.balanceOf(proxy),   0 ether);
-    }
-
-    function testProxyMock() public {
-        testProxyCash();
-        this.mock(tap, 5 ether);
-        assertEq(sai.balanceOf(proxy), 5 ether);
-    }
-
-    function testProxyLockAndDraw() public {
         uint initialBalance = address(this).balance;
-        assert(address(this).call.value(10 ether)(bytes4(keccak256("lockAndDraw(address,uint256)")), tub, 5 ether));
-        assertEq(initialBalance - 10 ether, address(this).balance);
-        assertEq(sai.balanceOf(this), 5 ether);
+        this.free(tub, cup, 20 ether);
+        assertEq(address(this).balance, initialBalance + 20 ether);
+        assertEq(tub.ink(cup), 30 ether);
     }
 
-    function testProxyLockAndDrawCupCreated() public {
+    function testSaiProxyLockAndDrawCupCreated() public {
         this.open(tub);
         uint initialBalance = address(this).balance;
         assert(address(this).call.value(10 ether)(bytes4(keccak256("lockAndDraw(address,bytes32,uint256)")), tub, 1, 5 ether));
@@ -444,7 +255,14 @@ contract SaiDSProxyTest is DSTest, DSMath {
         assertEq(sai.balanceOf(this), 5 ether);
     }
 
-    function testProxyWipeAndDraw() public {
+    function testSaiProxyLockAndDraw() public {
+        uint initialBalance = address(this).balance;
+        assert(address(this).call.value(10 ether)(bytes4(keccak256("lockAndDraw(address,uint256)")), tub, 5 ether));
+        assertEq(initialBalance - 10 ether, address(this).balance);
+        assertEq(sai.balanceOf(this), 5 ether);
+    }
+
+    function testSaiProxyWipeAndDraw() public {
         this.open(tub);
         assert(address(this).call.value(10 ether)(bytes4(keccak256("lockAndDraw(address,bytes32,uint256)")), tub, 1, 5 ether));
         uint initialBalance = address(this).balance;
@@ -454,7 +272,7 @@ contract SaiDSProxyTest is DSTest, DSMath {
         assertEq(sai.balanceOf(this), 0);
     }
 
-    function testProxyWipeAndDrawWarp() public {
+    function testSaiProxyWipeAndDrawWarp() public {
         this.open(tub);
         assert(address(this).call.value(10 ether)(bytes4(keccak256("lockAndDraw(address,bytes32,uint256)")), tub, 1, 5 ether));
         uint initialBalance = address(this).balance;
@@ -469,6 +287,19 @@ contract SaiDSProxyTest is DSTest, DSMath {
         assertEq(sai.balanceOf(this), 0);
         assertEq(gov.balanceOf(this), 0);
         assertEq(gov.balanceOf(proxy), 0);
+    }
+
+    function testSaiProxyShut() public {
+        bytes32 cup = this.open(tub);
+        this.lock.value(50 ether)(tub, cup);
+        this.draw(tub, cup, 10 ether);
+
+        assertEq(tub.ink(cup), 50 ether);
+        assertEq(tub.tab(cup), 10 ether);
+        sai.approve(proxy, uint(-1));
+        this.shut(tub, cup);
+        assertEq(tub.ink(cup),  0 ether);
+        assertEq(tub.tab(cup),  0 ether);
     }
 
     function() public payable {
