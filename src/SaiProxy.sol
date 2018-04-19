@@ -75,53 +75,61 @@ contract SaiProxy is DSMath {
     }
 
     function lock(address tub_, bytes32 cup) public payable {
-        TubInterface tub = TubInterface(tub_);
+        if (msg.value > 0) {
+            TubInterface tub = TubInterface(tub_);
 
-        tub.gem().deposit.value(msg.value)();
+            tub.gem().deposit.value(msg.value)();
 
-        uint ink = rdiv(msg.value, tub.per());
-        if (tub.gem().allowance(this, tub) != uint(-1)) {
-            tub.gem().approve(tub, uint(-1));
+            uint ink = rdiv(msg.value, tub.per());
+            if (tub.gem().allowance(this, tub) != uint(-1)) {
+                tub.gem().approve(tub, uint(-1));
+            }
+            tub.join(ink);
+
+            if (tub.skr().allowance(this, tub) != uint(-1)) {
+                tub.skr().approve(tub, uint(-1));
+            }
+            tub.lock(cup, ink);
         }
-        tub.join(ink);
-
-        if (tub.skr().allowance(this, tub) != uint(-1)) {
-            tub.skr().approve(tub, uint(-1));
-        }
-        tub.lock(cup, ink);
     }
 
     function draw(address tub_, bytes32 cup, uint wad) public {
-        TubInterface tub = TubInterface(tub_);
-        tub.draw(cup, wad);
-        tub.sai().transfer(msg.sender, wad);
+        if (wad > 0) {
+            TubInterface tub = TubInterface(tub_);
+            tub.draw(cup, wad);
+            tub.sai().transfer(msg.sender, wad);
+        }
     }
 
     function wipe(address tub_, bytes32 cup, uint wad) public {
-        TubInterface tub = TubInterface(tub_);
+        if (wad > 0) {
+            TubInterface tub = TubInterface(tub_);
 
-        tub.sai().transferFrom(msg.sender, this, wad);
-        bytes32 val;
-        bool ok;
-        (val, ok) = tub.pep().peek();
-        if (ok && val != 0) tub.gov().transferFrom(msg.sender, this, wdiv(rmul(wad, rdiv(tub.rap(cup), tub.tab(cup))), uint(val)));
+            tub.sai().transferFrom(msg.sender, this, wad);
+            bytes32 val;
+            bool ok;
+            (val, ok) = tub.pep().peek();
+            if (ok && val != 0) tub.gov().transferFrom(msg.sender, this, wdiv(rmul(wad, rdiv(tub.rap(cup), tub.tab(cup))), uint(val)));
 
-        if (tub.sai().allowance(this, tub) != uint(-1)) {
-            tub.sai().approve(tub, uint(-1));
+            if (tub.sai().allowance(this, tub) != uint(-1)) {
+                tub.sai().approve(tub, uint(-1));
+            }
+            if (tub.gov().allowance(this, tub) != uint(-1)) {
+                tub.gov().approve(tub, uint(-1));
+            }
+            tub.wipe(cup, wad);
         }
-        if (tub.gov().allowance(this, tub) != uint(-1)) {
-            tub.gov().approve(tub, uint(-1));
-        }
-        tub.wipe(cup, wad);
     }
 
     function free(address tub_, bytes32 cup, uint jam) public {
-        TubInterface tub = TubInterface(tub_);
-        uint ink = rdiv(jam, tub.per());
-        tub.free(cup, ink);
-        tub.exit(ink);
-        tub.gem().withdraw(jam);
-        address(msg.sender).transfer(jam);
+        if (jam > 0) {
+            TubInterface tub = TubInterface(tub_);
+            uint ink = rdiv(jam, tub.per());
+            tub.free(cup, ink);
+            tub.exit(ink);
+            tub.gem().withdraw(jam);
+            address(msg.sender).transfer(jam);
+        }
     }
 
     function lockAndDraw(address tub_, bytes32 cup, uint wad) public payable {
