@@ -10,3 +10,6 @@
 [submodule "lib/ds-math"]
 	path = lib/ds-math
 	url = https://github.com/dapphub/ds-math
+[submodule "lib/maker-otc"]
+	path = lib/maker-otc
+	url = https://github.com/makerdao/maker-otc.git

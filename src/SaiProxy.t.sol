@@ -2,6 +2,7 @@ pragma solidity ^0.4.20;
 
 import "ds-test/test.sol";
 import "ds-proxy/proxy.sol";
+import "maker-otc/matching_market.sol";
 
 import "sai/sai.t.sol";
 
@@ -19,6 +20,13 @@ contract WETH is DSToken {
         _balances[msg.sender] = sub(_balances[msg.sender], amount);
         _supply = sub(_supply, amount);
         require(msg.sender.call.value(amount)());
+    }
+}
+
+contract FakeUser {
+    function offer(MatchingMarket otc, uint pay_amt, DSToken pay_gem, uint buy_amt, DSToken buy_gem) public {
+        pay_gem.approve(otc, uint(-1));
+        otc.offer(pay_amt, pay_gem, buy_amt, buy_gem, 0);
     }
 }
 
@@ -157,6 +165,11 @@ contract SaiProxyTest is DSTest, DSMath {
         proxy.execute(saiProxy, msg.data);
     }
 
+    function wipe(address tub_, bytes32 cup_, uint wad_, address otc_) external {
+        tub_;cup_;wad_;otc_;
+        proxy.execute(saiProxy, msg.data);
+    }
+
     function free(address tub_, bytes32 cup_, uint wad_) external {
         tub_;cup_;wad_;
         proxy.execute(saiProxy, msg.data);
@@ -234,6 +247,45 @@ contract SaiProxyTest is DSTest, DSMath {
         sai.approve(proxy, uint(-1));
         this.wipe(tub, cup, 3 ether);
         assertEq(sai.balanceOf(this),  7 ether);
+        assertEq(tub.tab(cup), 7 ether);
+    }
+
+    function testSaiProxyWipeWarp() public {
+        bytes32 cup = this.open(tub);
+        this.lock.value(50 ether)(tub, cup);
+        this.draw(tub, cup, 10 ether);
+        mom.setFee(10001 * 10 ** 23);
+        gov.mint(wdiv(rmul(1 * 10 ** 23, 5 ether), uint(pep.read())));
+        warp(1 seconds);
+        assertEq(sai.balanceOf(this), 10 ether);
+        assertEq(tub.tab(cup), 10 ether);
+        sai.approve(proxy, uint(-1));
+        gov.approve(proxy, uint(-1));
+        this.wipe(tub, cup, 3 ether);
+        assertEq(sai.balanceOf(this),  7 ether);
+        assertEq(tub.tab(cup), 7 ether);
+    }
+
+    function testSaiProxyWipeWarpOTC() public {
+        MatchingMarket otc = new MatchingMarket(uint64(now + 1 weeks));
+        FakeUser user = new FakeUser();
+        otc.addTokenPairWhitelist(gov, sai);
+        gov.approve(otc, uint(-1));
+        gov.mint(1 ether);
+        gov.transfer(user, 1 ether);
+        user.offer(otc, 1 ether, gov, 1 ether, sai);
+
+        bytes32 cup = this.open(tub);
+        this.lock.value(50 ether)(tub, cup);
+        this.draw(tub, cup, 10 ether);
+        mom.setFee(10001 * 10 ** 23);
+        warp(1 seconds);
+        assertEq(sai.balanceOf(this), 10 ether);
+        assertEq(tub.tab(cup), 10 ether);
+        sai.approve(proxy, uint(-1));
+        assertEq(gov.balanceOf(this), 0);
+        this.wipe(tub, cup, 3 ether, address(otc));
+        assertEq(sai.balanceOf(this), 7 ether - rmul(tub.fee() - RAY, 3 ether));
         assertEq(tub.tab(cup), 7 ether);
     }
 

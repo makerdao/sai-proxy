@@ -65,6 +65,11 @@ contract PepInterface {
     function peek() public returns (bytes32, bool);
 }
 
+contract OtcInterface {
+    function getPayAmount(address, address, uint) public constant returns (uint);
+    function buyAllAmount(address, uint, address pay_gem, uint) public returns (uint);
+}
+
 contract SaiProxy is DSMath {
     function open(address tub_) public returns (bytes32) {
         return TubInterface(tub_).open();
@@ -101,15 +106,31 @@ contract SaiProxy is DSMath {
         }
     }
 
-    function wipe(address tub_, bytes32 cup, uint wad) public {
+    function handleGovFee(TubInterface tub, uint saiDebtFee, address otc_) internal {
+        bytes32 val;
+        bool ok;
+        (val, ok) = tub.pep().peek();
+        if (ok && val != 0) {
+            uint govAmt = wdiv(saiDebtFee, uint(val));
+            if (otc_ != address(0)) {
+                uint saiGovAmt = OtcInterface(otc_).getPayAmount(tub.sai(), tub.gov(), govAmt);
+                if (tub.sai().allowance(this, otc_) != uint(-1)) {
+                    tub.sai().approve(otc_, uint(-1));
+                }
+                tub.sai().transferFrom(msg.sender, this, saiGovAmt);
+                OtcInterface(otc_).buyAllAmount(tub.gov(), govAmt, tub.sai(), saiGovAmt);
+            } else {
+                tub.gov().transferFrom(msg.sender, this, govAmt);
+            }
+        }
+    }
+
+    function wipe(address tub_, bytes32 cup, uint wad, address otc_) public {
         if (wad > 0) {
             TubInterface tub = TubInterface(tub_);
 
             tub.sai().transferFrom(msg.sender, this, wad);
-            bytes32 val;
-            bool ok;
-            (val, ok) = tub.pep().peek();
-            if (ok && val != 0) tub.gov().transferFrom(msg.sender, this, wdiv(rmul(wad, rdiv(tub.rap(cup), tub.tab(cup))), uint(val)));
+            handleGovFee(tub, rmul(wad, rdiv(tub.rap(cup), tub.tab(cup))), otc_);
 
             if (tub.sai().allowance(this, tub) != uint(-1)) {
                 tub.sai().approve(tub, uint(-1));
@@ -119,6 +140,10 @@ contract SaiProxy is DSMath {
             }
             tub.wipe(cup, wad);
         }
+    }
+
+    function wipe(address tub_, bytes32 cup, uint wad) public {
+        wipe(tub_, cup, wad, address(0));
     }
 
     function free(address tub_, bytes32 cup, uint jam) public {
