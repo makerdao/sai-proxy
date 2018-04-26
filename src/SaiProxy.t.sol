@@ -262,7 +262,7 @@ contract SaiProxyTest is DSTest, DSMath {
         assertEq(sai.balanceOf(this), 5 ether);
     }
 
-    function testSaiProxyWipeAndDraw() public {
+    function testSaiProxyWipeAndFree() public {
         this.open(tub);
         assert(address(this).call.value(10 ether)(bytes4(keccak256("lockAndDraw(address,bytes32,uint256)")), tub, 1, 5 ether));
         uint initialBalance = address(this).balance;
@@ -272,7 +272,7 @@ contract SaiProxyTest is DSTest, DSMath {
         assertEq(sai.balanceOf(this), 0);
     }
 
-    function testSaiProxyWipeAndDrawWarp() public {
+    function testSaiProxyWipeAndFreeWarp() public {
         this.open(tub);
         assert(address(this).call.value(10 ether)(bytes4(keccak256("lockAndDraw(address,bytes32,uint256)")), tub, 1, 5 ether));
         uint initialBalance = address(this).balance;
