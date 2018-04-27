@@ -53,6 +53,9 @@ contract SaiProxyTest is DSTest, DSMath {
     DSProxy proxy;
     address saiProxy;
 
+    MatchingMarket otc;
+    FakeUser user;
+
     function ray(uint256 wad) internal pure returns (uint256) {
         return wad * 10 ** 9;
     }
@@ -129,6 +132,13 @@ contract SaiProxyTest is DSTest, DSMath {
         mom.setCap(1000 ether);
         gem.deposit.value(1000 ether)();
         gem.push(proxy, 100 ether);
+
+        otc = new MatchingMarket(uint64(now + 1 weeks));
+        user = new FakeUser();
+        otc.addTokenPairWhitelist(gov, sai);
+        gov.mint(1 ether);
+        gov.transfer(user, 1 ether);
+        user.offer(otc, 1 ether, gov, 1 ether, sai);
     }
 
     // These tests work by calling `this.foo(args)`, to set the code and
@@ -190,8 +200,18 @@ contract SaiProxyTest is DSTest, DSMath {
         proxy.execute(saiProxy, msg.data);
     }
 
+    function wipeAndFree(address tub_, bytes32 cup_, uint jam_, uint wad_, address otc_) external payable {
+        tub_;cup_;jam_;wad_;otc_;
+        proxy.execute(saiProxy, msg.data);
+    }
+
     function shut(address tub_, bytes32 cup_) external {
         tub_;cup_;
+        proxy.execute(saiProxy, msg.data);
+    }
+
+    function shut(address tub_, bytes32 cup_, address otc_) external {
+        tub_;cup_;otc_;
         proxy.execute(saiProxy, msg.data);
     }
 
@@ -267,14 +287,6 @@ contract SaiProxyTest is DSTest, DSMath {
     }
 
     function testSaiProxyWipeWarpOTC() public {
-        MatchingMarket otc = new MatchingMarket(uint64(now + 1 weeks));
-        FakeUser user = new FakeUser();
-        otc.addTokenPairWhitelist(gov, sai);
-        gov.approve(otc, uint(-1));
-        gov.mint(1 ether);
-        gov.transfer(user, 1 ether);
-        user.offer(otc, 1 ether, gov, 1 ether, sai);
-
         bytes32 cup = this.open(tub);
         this.lock.value(50 ether)(tub, cup);
         this.draw(tub, cup, 10 ether);
@@ -341,6 +353,20 @@ contract SaiProxyTest is DSTest, DSMath {
         assertEq(gov.balanceOf(proxy), 0);
     }
 
+    function testSaiProxyWipeAndFreeWarpOTC() public {
+        bytes32 cup = this.open(tub);
+        assert(address(this).call.value(10 ether)(bytes4(keccak256("lockAndDraw(address,bytes32,uint256)")), tub, 1, 5 ether));
+        uint initialBalance = address(this).balance;
+        sai.approve(proxy, uint(-1));
+        mom.setFee(10001 * 10 ** 23);
+        warp(1 seconds);
+        assertEq(gov.balanceOf(this), 0);
+        this.wipeAndFree(tub, 1, 5 ether, 3 ether, otc);
+        assertEq(initialBalance + 5 ether, address(this).balance);
+        assertEq(sai.balanceOf(this), 2 ether - rmul(tub.fee() - RAY, 3 ether));
+        assertEq(tub.tab(cup), 2 ether);
+    }
+
     function testSaiProxyShut() public {
         bytes32 cup = this.open(tub);
         this.lock.value(50 ether)(tub, cup);
@@ -350,6 +376,44 @@ contract SaiProxyTest is DSTest, DSMath {
         assertEq(tub.tab(cup), 10 ether);
         sai.approve(proxy, uint(-1));
         this.shut(tub, cup);
+        assertEq(tub.ink(cup),  0 ether);
+        assertEq(tub.tab(cup),  0 ether);
+    }
+
+    function testSaiProxyShutWarp() public {
+        bytes32 cup = this.open(tub);
+        this.lock.value(50 ether)(tub, cup);
+        this.draw(tub, cup, 10 ether);
+
+        mom.setFee(10001 * 10 ** 23);
+        gov.mint(wdiv(rmul(1 * 10 ** 23, 10 ether), uint(pep.read())));
+        warp(1 seconds);
+
+        assertEq(tub.ink(cup), 50 ether);
+        assertEq(tub.tab(cup), 10 ether);
+        gov.approve(proxy, uint(-1));
+        sai.approve(proxy, uint(-1));
+        this.shut(tub, cup);
+        assertEq(sai.balanceOf(this), 0);
+        assertEq(gov.balanceOf(this), 0);
+        assertEq(tub.ink(cup),  0 ether);
+        assertEq(tub.tab(cup),  0 ether);
+    }
+
+    function testSaiProxyShutWarpOTC() public {
+        bytes32 cup = this.open(tub);
+        this.lock.value(50 ether)(tub, cup);
+        this.draw(tub, cup, 10 ether);
+
+        mom.setFee(10001 * 10 ** 23);
+        sai.mint(rmul(1 * 10 ** 23, 10 ether));
+        warp(1 seconds);
+
+        assertEq(tub.ink(cup), 50 ether);
+        assertEq(tub.tab(cup), 10 ether);
+        sai.approve(proxy, uint(-1));
+        this.shut(tub, cup, otc);
+        assertEq(sai.balanceOf(this), 0);
         assertEq(tub.ink(cup),  0 ether);
         assertEq(tub.tab(cup),  0 ether);
     }

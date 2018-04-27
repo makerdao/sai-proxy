@@ -173,9 +173,20 @@ contract SaiProxy is DSMath {
         free(tub_, cup, jam);
     }
 
+    function wipeAndFree(address tub_, bytes32 cup, uint jam, uint wad, address otc_) public payable {
+        wipe(tub_, cup, wad, otc_);
+        free(tub_, cup, jam);
+    }
+
     function shut(address tub_, bytes32 cup) public {
         TubInterface tub = TubInterface(tub_);
         wipeAndFree(tub_, cup, rmul(tub.ink(cup), tub.per()), tub.tab(cup));
+        tub.shut(cup);
+    }
+
+    function shut(address tub_, bytes32 cup, address otc_) public {
+        TubInterface tub = TubInterface(tub_);
+        wipeAndFree(tub_, cup, rmul(tub.ink(cup), tub.per()), tub.tab(cup), otc_);
         tub.shut(cup);
     }
 }
