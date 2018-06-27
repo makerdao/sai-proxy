@@ -1,4 +1,4 @@
-pragma solidity ^0.4.20;
+pragma solidity ^0.4.23;
 
 import "ds-test/test.sol";
 import "ds-proxy/proxy.sol";
@@ -50,6 +50,7 @@ contract SaiProxyTest is DSTest, DSMath {
     DSValue  pep;
     DSRoles  dad;
 
+    DSProxyFactory factory;
     DSProxy proxy;
     address saiProxy;
 
@@ -125,7 +126,7 @@ contract SaiProxyTest is DSTest, DSMath {
 
         mom.setCap(20 ether);
 
-        DSProxyFactory factory = new DSProxyFactory();
+        factory = new DSProxyFactory();
         proxy = factory.build();
 
         saiProxy = address(new SaiProxy());

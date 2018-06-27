@@ -1,4 +1,4 @@
-pragma solidity ^0.4.20;
+pragma solidity ^0.4.23;
 
 import "ds-test/test.sol";
 import "ds-proxy/proxy.sol";

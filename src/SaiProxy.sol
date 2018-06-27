@@ -1,4 +1,4 @@
-pragma solidity ^0.4.20;
+pragma solidity ^0.4.23;
 
 import "ds-math/math.sol";
 
@@ -165,7 +165,6 @@ contract SaiProxy is DSMath {
     function lockAndDraw(address tub_, uint wad) public payable returns (bytes32 cup) {
         cup = open(tub_);
         lockAndDraw(tub_, cup, wad);
-        return cup;
     }
 
     function wipeAndFree(address tub_, bytes32 cup, uint jam, uint wad) public payable {
