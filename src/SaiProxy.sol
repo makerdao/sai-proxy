@@ -151,6 +151,9 @@ contract SaiProxy is DSMath {
             TubInterface tub = TubInterface(tub_);
             uint ink = rdiv(jam, tub.per());
             tub.free(cup, ink);
+            if (tub.skr().allowance(this, tub) != uint(-1)) {
+                tub.skr().approve(tub, uint(-1));
+            }
             tub.exit(ink);
             tub.gem().withdraw(jam);
             address(msg.sender).transfer(jam);
