@@ -1,14 +1,14 @@
 pragma solidity ^0.4.23;
 
 import "./SaiProxy.t.sol";
-import "./ProxyCreationAndExecute.sol";
+import "./SaiProxyCreateAndExecute.sol";
 
-contract ProxyCreationAndExecuteTest is SaiProxyTest {
-    ProxyCreationAndExecute creator;
+contract SaiProxyCreateAndExecuteTest is SaiProxyTest {
+    SaiProxyCreateAndExecute creator;
 
     function setUp() public {
         super.setUp();
-        creator = new ProxyCreationAndExecute();
+        creator = new SaiProxyCreateAndExecute();
         log_named_address('factory', factory);
     }
 
