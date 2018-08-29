@@ -6,7 +6,7 @@ contract ProxyFactoryInterface {
     function build(address) public returns (address);
 }
 
-contract ProxyCreationAndExecute is SaiProxy {
+contract SaiProxyCreateAndExecute is SaiProxy {
     function createLockAndDraw(address factory_, address tub_, uint wad) public payable returns (address proxy, bytes32 cup) {
         proxy = ProxyFactoryInterface(factory_).build(msg.sender);
         cup = open(tub_);
