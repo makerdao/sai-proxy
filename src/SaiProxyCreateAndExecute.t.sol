@@ -15,7 +15,7 @@ contract SaiProxyCreateAndExecuteTest is SaiProxyTest {
     function testCreateLockAndDraw() public {
         uint initialBalance = address(this).balance;
         address newProxy;
-        (newProxy,) = creator.createLockAndDraw.value(10 ether)(factory, tub, 5 ether);
+        (newProxy,) = creator.createOpenLockAndDraw.value(10 ether)(factory, tub, 5 ether);
         assertEq(initialBalance - 10 ether, address(this).balance);
         assertEq(sai.balanceOf(this), 5 ether);
         assertEq(DSProxy(newProxy).owner(), this);

@@ -7,7 +7,7 @@ contract ProxyRegistryInterface {
 }
 
 contract SaiProxyCreateAndExecute is SaiProxy {
-    function createLockAndDraw(address registry_, address tub_, uint wad) public payable returns (address proxy, bytes32 cup) {
+    function createOpenLockAndDraw(address registry_, address tub_, uint wad) public payable returns (address proxy, bytes32 cup) {
         proxy = ProxyRegistryInterface(registry_).build(msg.sender);
         cup = open(tub_);
         lockAndDraw(tub_, cup, wad);
