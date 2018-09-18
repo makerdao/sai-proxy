@@ -9,10 +9,27 @@ contract SaiProxyCreateAndExecuteTest is SaiProxyTest {
     function setUp() public {
         super.setUp();
         creator = new SaiProxyCreateAndExecute();
-        log_named_address('factory', factory);
     }
 
-    function testCreateLockAndDraw() public {
+    function testCreateAndOpen() public {
+        uint initialBalance = address(this).balance;
+        address newProxy;
+        (newProxy,) = creator.createAndOpen(factory, tub);
+        assertEq(initialBalance, address(this).balance);
+        assertEq(sai.balanceOf(this), 0);
+        assertEq(DSProxy(newProxy).owner(), this);
+    }
+
+    function testCreateOpenAndLock() public {
+        uint initialBalance = address(this).balance;
+        address newProxy;
+        (newProxy,) = creator.createOpenAndLock.value(10 ether)(factory, tub);
+        assertEq(initialBalance - 10 ether, address(this).balance);
+        assertEq(sai.balanceOf(this), 0);
+        assertEq(DSProxy(newProxy).owner(), this);
+    }
+
+    function testCreateOpenLockAndDraw() public {
         uint initialBalance = address(this).balance;
         address newProxy;
         (newProxy,) = creator.createOpenLockAndDraw.value(10 ether)(factory, tub, 5 ether);
