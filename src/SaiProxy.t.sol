@@ -101,6 +101,8 @@ contract SaiProxyTest is DSTest, DSMath {
         daiFab.makeTapTop();
         DSRoles authority = new DSRoles();
         authority.setRootUser(this, true);
+        daiFab.configParams();
+        daiFab.verifyParams();
         daiFab.configAuth(authority);
 
         sai = DSToken(daiFab.sai());
@@ -112,6 +114,12 @@ contract SaiProxyTest is DSTest, DSMath {
         top = DevTop(daiFab.top());
         mom = SaiMom(daiFab.mom());
         dad = DSRoles(daiFab.dad());
+
+        // Reset some config
+        mom.setAxe(ray(1 ether));
+        mom.setMat(ray(1  ether));
+        mom.setFee(ray(1 ether));
+        mom.setTapGap(1 ether);
 
         sai.approve(tub);
         skr.approve(tub);
@@ -275,8 +283,8 @@ contract SaiProxyTest is DSTest, DSMath {
         bytes32 cup = this.open(tub);
         this.lock.value(50 ether)(tub, cup);
         this.draw(tub, cup, 10 ether);
-        mom.setFee(10001 * 10 ** 23);
-        gov.mint(wdiv(rmul(1 * 10 ** 23, 5 ether), uint(pep.read())));
+        mom.setFee(10000.01 * 10 ** 23);
+        gov.mint(wdiv(rmul(1 * 10 ** 21, 5 ether), uint(pep.read())));
         warp(1 seconds);
         assertEq(sai.balanceOf(this), 10 ether);
         assertEq(tub.tab(cup), 10 ether);
@@ -291,7 +299,7 @@ contract SaiProxyTest is DSTest, DSMath {
         bytes32 cup = this.open(tub);
         this.lock.value(50 ether)(tub, cup);
         this.draw(tub, cup, 10 ether);
-        mom.setFee(10001 * 10 ** 23);
+        mom.setFee(10000.01 * 10 ** 23);
         warp(1 seconds);
         assertEq(sai.balanceOf(this), 10 ether);
         assertEq(tub.tab(cup), 10 ether);
@@ -344,8 +352,8 @@ contract SaiProxyTest is DSTest, DSMath {
         sai.approve(proxy, uint(-1));
         gov.approve(proxy, uint(-1));
         assertEq(gov.balanceOf(this), 0);
-        mom.setFee(10001 * 10 ** 23);
-        gov.mint(wdiv(rmul(1 * 10 ** 23, 5 ether), uint(pep.read())));
+        mom.setFee(10000.01 * 10 ** 23);
+        gov.mint(wdiv(rmul(1 * 10 ** 21, 5 ether), uint(pep.read())));
         warp(1 seconds);
         this.wipeAndFree(tub, 1, 10 ether, 5 ether);
         assertEq(initialBalance + 10 ether, address(this).balance);
@@ -359,7 +367,7 @@ contract SaiProxyTest is DSTest, DSMath {
         assert(address(this).call.value(10 ether)(bytes4(keccak256("lockAndDraw(address,bytes32,uint256)")), tub, 1, 5 ether));
         uint initialBalance = address(this).balance;
         sai.approve(proxy, uint(-1));
-        mom.setFee(10001 * 10 ** 23);
+        mom.setFee(10000.01 * 10 ** 23);
         warp(1 seconds);
         assertEq(gov.balanceOf(this), 0);
         this.wipeAndFree(tub, 1, 5 ether, 3 ether, otc);
@@ -386,8 +394,8 @@ contract SaiProxyTest is DSTest, DSMath {
         this.lock.value(50 ether)(tub, cup);
         this.draw(tub, cup, 10 ether);
 
-        mom.setFee(10001 * 10 ** 23);
-        gov.mint(wdiv(rmul(1 * 10 ** 23, 10 ether), uint(pep.read())));
+        mom.setFee(10000.01 * 10 ** 23);
+        gov.mint(wdiv(rmul(1 * 10 ** 21, 10 ether), uint(pep.read())));
         warp(1 seconds);
 
         assertEq(tub.ink(cup), 50 ether);
@@ -406,8 +414,8 @@ contract SaiProxyTest is DSTest, DSMath {
         this.lock.value(50 ether)(tub, cup);
         this.draw(tub, cup, 10 ether);
 
-        mom.setFee(10001 * 10 ** 23);
-        sai.mint(rmul(1 * 10 ** 23, 10 ether));
+        mom.setFee(10000.01 * 10 ** 23);
+        sai.mint(rmul(1 * 10 ** 21, 10 ether));
         warp(1 seconds);
 
         assertEq(tub.ink(cup), 50 ether);
