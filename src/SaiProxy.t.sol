@@ -437,6 +437,18 @@ contract SaiProxyTest is DSTest, DSMath {
         assertEq(tub.ink(cup),  0 ether);
     }
 
+    function testFailSaiProxyLockClosedCup() public {
+        bytes32 cup = this.open(tub);
+        this.shut(tub, cup);
+        this.lock.value(50 ether)(tub, cup);
+    }
+
+    function testFailSaiProxyLockNotOwnedCup() public {
+        bytes32 cup = this.open(tub);
+        this.give(tub, cup, address(123));
+        this.lock.value(50 ether)(tub, cup);
+    }
+
     function() public payable {
     }
 }

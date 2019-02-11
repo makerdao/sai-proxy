@@ -83,6 +83,9 @@ contract SaiProxy is DSMath {
         if (msg.value > 0) {
             TubInterface tub = TubInterface(tub_);
 
+            (address lad,,,) = tub.cups(cup);
+            require(lad == address(this), "cup-not-owned");
+
             tub.gem().deposit.value(msg.value)();
 
             uint ink = rdiv(msg.value, tub.per());
