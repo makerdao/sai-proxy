@@ -12,40 +12,22 @@ contract TubInterface {
     function wipe(bytes32, uint) public;
     function give(bytes32, address) public;
     function shut(bytes32) public;
-    function bite(bytes32) public;
-    function cups(bytes32) public returns (address, uint, uint, uint);
-    function gem() public returns (TokenInterface);
-    function gov() public returns (TokenInterface);
-    function skr() public returns (TokenInterface);
-    function sai() public returns (TokenInterface);
-    function vox() public returns (VoxInterface);
-    function ask(uint) public returns (uint);
-    function mat() public returns (uint);
-    function chi() public returns (uint);
-    function ink(bytes32) public returns (uint);
-    function tab(bytes32) public returns (uint);
-    function rap(bytes32) public returns (uint);
-    function per() public returns (uint);
-    function pip() public returns (PipInterface);
-    function pep() public returns (PepInterface);
-    function tag() public returns (uint);
-    function drip() public;
-}
-
-contract TapInterface {
-    function skr() public returns (TokenInterface);
-    function sai() public returns (TokenInterface);
-    function tub() public returns (TubInterface);
-    function bust(uint) public;
-    function boom(uint) public;
-    function cash(uint) public;
-    function mock(uint) public;
-    function heal() public;
+    function cups(bytes32) public view returns (address, uint, uint, uint);
+    function gem() public view returns (TokenInterface);
+    function gov() public view returns (TokenInterface);
+    function skr() public view returns (TokenInterface);
+    function sai() public view returns (TokenInterface);
+    function mat() public view returns (uint);
+    function ink(bytes32) public view returns (uint);
+    function tab(bytes32) public view returns (uint);
+    function rap(bytes32) public view returns (uint);
+    function per() public view returns (uint);
+    function pep() public view returns (PepInterface);
 }
 
 contract TokenInterface {
-    function allowance(address, address) public returns (uint);
-    function balanceOf(address) public returns (uint);
+    function allowance(address, address) public view returns (uint);
+    function balanceOf(address) public view returns (uint);
     function approve(address, uint) public;
     function transfer(address, uint) public returns (bool);
     function transferFrom(address, address, uint) public returns (bool);
@@ -53,20 +35,12 @@ contract TokenInterface {
     function withdraw(uint) public;
 }
 
-contract VoxInterface {
-    function par() public returns (uint);
-}
-
-contract PipInterface {
-    function read() public returns (bytes32);
-}
-
 contract PepInterface {
     function peek() public returns (bytes32, bool);
 }
 
 contract OtcInterface {
-    function getPayAmount(address, address, uint) public constant returns (uint);
+    function getPayAmount(address, address, uint) public view returns (uint);
     function buyAllAmount(address, uint, address pay_gem, uint) public returns (uint);
 }
 
@@ -89,6 +63,8 @@ contract SaiProxy is DSMath {
             tub.gem().deposit.value(msg.value)();
 
             uint ink = rdiv(msg.value, tub.per());
+            ink = rmul(ink, tub.per()) <= msg.value ? ink : ink - 1;
+
             if (tub.gem().allowance(this, tub) != uint(-1)) {
                 tub.gem().approve(tub, uint(-1));
             }
@@ -153,13 +129,15 @@ contract SaiProxy is DSMath {
         if (jam > 0) {
             TubInterface tub = TubInterface(tub_);
             uint ink = rdiv(jam, tub.per());
+            ink = rmul(ink, tub.per()) <= jam ? ink : ink - 1;
             tub.free(cup, ink);
             if (tub.skr().allowance(this, tub) != uint(-1)) {
                 tub.skr().approve(tub, uint(-1));
             }
             tub.exit(ink);
-            tub.gem().withdraw(jam);
-            address(msg.sender).transfer(jam);
+            uint freeJam = tub.gem().balanceOf(this); // Withdraw possible previous stuck WETH as well
+            tub.gem().withdraw(freeJam);
+            address(msg.sender).transfer(freeJam);
         }
     }
 

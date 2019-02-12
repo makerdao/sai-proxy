@@ -139,8 +139,6 @@ contract SaiProxyTest is DSTest, DSMath {
 
         saiProxy = address(new SaiProxy());
         mom.setCap(1000 ether);
-        gem.deposit.value(1000 ether)();
-        gem.push(proxy, 100 ether);
 
         otc = new MatchingMarket(uint64(now + 1 weeks));
         user = new FakeUser();
@@ -447,6 +445,24 @@ contract SaiProxyTest is DSTest, DSMath {
         bytes32 cup = this.open(tub);
         this.give(tub, cup, address(123));
         this.lock.value(50 ether)(tub, cup);
+    }
+
+    function testLockFreeAvoidRoundIssue() public {
+        // Simulating a conflictive tub.per() ratio with a deposit of 0.5 ether
+        skr.mint(1.959947525989880031132464 * 10 ** 24);
+        gem.mint(tub, 2.03918726880765997926007 * 10 ** 24);
+        // uint ink = rdiv(0.5 ether, tub.per());
+        // uint wad = rmul(ink, tub.per());
+        // assertEq(wad, 0.5 ether);
+        uint initialBalance = this.balance;
+        bytes32 cup = this.open(tub);
+        this.lock.value(0.5 ether)(tub, cup);
+        assertEq(this.balance, initialBalance - 0.5 ether);
+        assertEq(tub.ink(cup), rdiv(0.5 ether, tub.per()) - 1);
+        assertEq(rmul(tub.ink(cup), tub.per()), 0.5 ether - 1); // Not possible to draw an equivalent amount of 0.5 ETH this time
+        assertEq(gem.balanceOf(proxy), 1); // Stuck WETH at proxy level, as can not be used
+        this.free(tub, cup, 0.5 ether);
+        assertEq(this.balance, initialBalance);
     }
 
     function() public payable {
